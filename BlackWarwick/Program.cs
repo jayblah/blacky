@@ -57,7 +57,7 @@ namespace BlackWarwick
             SetSmiteSlot();
 
             // Register events
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
 
             // Print
@@ -75,7 +75,7 @@ namespace BlackWarwick
                 var circleEntry = Menu.Item("drawRange" + spell.Slot).GetValue<Circle>();
                 if (circleEntry.Active)
                 {
-                    Utility.DrawCircle(Player.Position, spell.Range, circleEntry.Color);
+                    Render.Circle.DrawCircle(Player.Position, spell.Range, circleEntry.Color);
                 }
             }
         }
