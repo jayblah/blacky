@@ -176,7 +176,7 @@ namespace NidaleeTheBestialHuntress
                 case 0: // closest
                     selectedAlly =
                         HeroManager.Allies.Where(hero => !hero.IsMe)
-                            .OrderBy(closest => closest.Distance(_player.Position))
+                            .OrderBy(closest => closest.Distance(_player.ServerPosition))
                             .FirstOrDefault();
                     break;
                 case 1: // most ad
@@ -222,7 +222,7 @@ namespace NidaleeTheBestialHuntress
                 }
             }
 
-            if (spell.IsReady() && _player.Distance(selectedAlly.Position) < spell.Range)
+            if (spell.IsReady() && _player.Distance(selectedAlly.ServerPosition) < spell.Range)
             {
                 spell.Cast(selectedAlly);
             }
