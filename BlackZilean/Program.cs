@@ -255,7 +255,7 @@ namespace BlackZilean
         #endregion
 
         #region SelfUlt
-
+        // took something from you jQuery because i was too lazy :p
         private static void SelfUlt()
         {
             var ultSelf = _menu.Item("ultSelf").GetValue<bool>();
@@ -273,7 +273,7 @@ namespace BlackZilean
         #endregion
 
         #region AllyUlt
-
+        // took something from you jQuery because i was too lazy :p
         private static void AllyUlt()
         {
             var ultAlly = _menu.Item("ultAlly").GetValue<bool>();
