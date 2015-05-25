@@ -392,8 +392,8 @@ namespace BlackZilean
             var drawings = new Menu("Drawing Options", "drawings");
             {
                 drawings.AddItem(new MenuItem("drawRangeQR", "Q / R range").SetValue(new Circle(true, Color.Aquamarine)));
-                drawings.AddItem(new MenuItem("drawRangeE", "E range").SetValue(new Circle(false, Color.Aquamarine)));
-                drawings.AddItem(new MenuItem("drawDamage", "Draw Spell Damage").SetValue(new Circle(false, Color.GreenYellow)));
+                drawings.AddItem(new MenuItem("drawRangeE", "E range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawDamage", "Draw Spell Damage").SetValue(new Circle(true, Color.GreenYellow)));
                 _menu.AddSubMenu(drawings);
             }
 
