@@ -1,192 +1,235 @@
-﻿using System;
+﻿// 
+// LeagueSharp.Common is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with LeagueSharp.Common.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
+using Color = System.Drawing.Color;
+
 
 namespace BlackPoppy
 {
-    internal class Program
+    public static class Program
     {
-        // Generic
-        public static readonly string ChampName = "Poppy";
-        private static readonly Obj_AI_Hero Player = ObjectManager.Player;
-        // Spells
+        private const string ChampionName = "Poppy";
+        private static Obj_AI_Hero _player;
         private static readonly List<Spell> SpellList = new List<Spell>();
-        private static Spell _q, _w, _e, _r;
-        private static SpellSlot _igniteSlot;
-        // Menu
-        public static Menu Menu;
-        private static Orbwalking.Orbwalker _ow;
+        private static Spell _devastatingBlow, _paragonOfDemacia, _heroicCharge, _diplomaticImmunity;
+        private static SpellSlot _ignite;
+        private static Menu _menu;
+        private static Orbwalking.Orbwalker _orbwalker;
+        private static ManaManager _manaManager;
+
+        #region Main
 
         public static void Main(string[] args)
         {
-            // Register events
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
 
+        #endregion
+
+        #region OnGameLoad
+
         private static void Game_OnGameLoad(EventArgs args)
         {
-            //Champ validation
-            if (Player.ChampionName != ChampName)
+            _player = ObjectManager.Player;
+            if (_player.ChampionName != ChampionName)
             {
                 return;
             }
 
-            //Define spells
-            _q = new Spell(SpellSlot.Q, 250f);
-            _w = new Spell(SpellSlot.W, 250f);
-            _e = new Spell(SpellSlot.E, 500f);
-            _r = new Spell(SpellSlot.R, 850f);
-            SpellList.AddRange(new[] {_q, _w, _e, _r});
+            DamageIndicator.Initialize(GetComboDamage);
+            DamageIndicator.Enabled = true;
+            DamageIndicator.DrawingColor = Color.Green;
 
-            _igniteSlot = Player.GetSpellSlot("SummonerDot");
+            _devastatingBlow = new Spell(SpellSlot.Q, 0);
+            _paragonOfDemacia = new Spell(SpellSlot.W, 0);
+            _heroicCharge = new Spell(SpellSlot.E, 525);
+            _diplomaticImmunity = new Spell(SpellSlot.R, 900);
 
-            // Finetune spells
-            _e.SetTargetted(0.5f, 1450f);
+            SpellList.AddRange(new[] { _heroicCharge, _diplomaticImmunity });
 
-            // Create menu
+            _ignite = _player.GetSpellSlot("summonerdot");
+
+            _manaManager = new ManaManager();
+
             CreateMenu();
 
-            // Register events
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
+            Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
+            AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
+            Orbwalking.OnAttack += OnAttack;
 
-            // Print
-            Game.PrintChat(
-                String.Format("<font color='#08F5F8'>blacky -</font> <font color='#FFFFFF'>{0} Loaded!</font>",
-                    ChampName));
+            ShowNotification("BlackPoppy by blacky - Loaded", Color.Crimson, 10000);
+            ShowNotification("ManaManager by iJabba", Color.Crimson, 10000);
         }
+
+        #endregion
+
+        #region OnDraw
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            // Spell ranges
             foreach (var spell in SpellList)
             {
-                // Regular spell ranges
-                var circleEntry = Menu.Item("drawRange" + spell.Slot).GetValue<Circle>();
-                if (circleEntry.Active)
+                var circleEntry = _menu.Item("drawRange" + spell.Slot).GetValue<Circle>();
+                if (circleEntry.Active && !_player.IsDead)
                 {
-                    Render.Circle.DrawCircle(Player.Position, spell.Range, circleEntry.Color);
+                    Render.Circle.DrawCircle(_player.Position, spell.Range, circleEntry.Color);
+                }
+            }
+
+            Circle damageCircle = _menu.Item("drawDamage").GetValue<Circle>();
+
+            DamageIndicator.DrawingColor = damageCircle.Color;
+            DamageIndicator.Enabled = damageCircle.Active;
+        }
+
+        #endregion
+
+        #region OnGameUpdate
+
+        private static void Game_OnGameUpdate(EventArgs args)
+        {
+            switch (_orbwalker.ActiveMode)
+            {
+                case Orbwalking.OrbwalkingMode.Combo:
+                    OnCombo();
+                    break;
+                case Orbwalking.OrbwalkingMode.LaneClear:
+                    WaveClear();
+                    break;
+            }
+        }
+
+        #endregion
+
+        #region OnInterrupt
+
+        private static void OnInterruptableTarget(Obj_AI_Hero sender, Interrupter2.InterruptableTargetEventArgs args)
+        {
+            if (_menu.Item("miscInterrupt").GetValue<bool>() && _heroicCharge.IsReady() && _heroicCharge.CanCast(sender))
+            {
+                _heroicCharge.CastOnUnit(sender);
+            }
+        }
+
+        #endregion
+
+        #region OnGapcloser
+
+        private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
+        {
+            if (_menu.Item("miscGapcloser").GetValue<bool>() && _heroicCharge.IsReady() && _heroicCharge.CanCast(gapcloser.Sender) && WallCheck(_player, gapcloser.Sender))
+            {
+                _heroicCharge.CastOnUnit(gapcloser.Sender);
+            }
+        }
+
+        #endregion
+
+        #region OnAttack
+
+        private static void OnAttack(AttackableUnit unit, AttackableUnit target)
+        {
+            Obj_AI_Hero targetQ = target as Obj_AI_Hero;
+            if (unit.IsMe && _devastatingBlow.IsReady() && _menu.Item("useQ").GetValue<bool>())
+            {
+                if (targetQ.IsValidTarget())
+                {
+                    _devastatingBlow.Cast();
                 }
             }
         }
 
-        private static void Game_OnGameUpdate(EventArgs args)
+        #endregion
+
+        #region Combo
+
+        private static void OnCombo()
         {
-            var target = TargetSelector.GetTarget(_r.Range, TargetSelector.DamageType.Magical);
-
-            // Combo
-            if (Menu.SubMenu("combo").Item("comboActive").GetValue<KeyBind>().Active)
-            {
-                OnCombo(target);
-            }
-
-            // Harass
-            if (Menu.SubMenu("harass").Item("harassActive").GetValue<KeyBind>().Active &&
-                (ObjectManager.Player.Mana/ObjectManager.Player.MaxMana*100) >
-                Menu.Item("harassMana").GetValue<Slider>().Value)
-            {
-                OnHarass(target);
-            }
-
-            // WaveClear
-            if (Menu.SubMenu("waveclear").Item("wcActive").GetValue<KeyBind>().Active &&
-                (Player.Mana/Player.MaxMana*100) >
-                Menu.Item("wcMana").GetValue<Slider>().Value)
-            {
-                WaveClear();
-            }
-
-            // Misc
-            if (Menu.SubMenu("misc").Item("miscEscapeToMouse").GetValue<KeyBind>().Active)
-            {
-                EscapeToMouse();
-            }
-
-            // Killsteal
-            Killsteal(target);
-        }
-
-        private static void OnCombo(Obj_AI_Hero target)
-        {
-            var comboMenu = Menu.SubMenu("combo");
-            var useQ = comboMenu.Item("comboUseQ").GetValue<bool>() && _q.IsReady();
-            var useW = comboMenu.Item("comboUseW").GetValue<bool>() && _w.IsReady();
-            var useE = comboMenu.Item("comboUseE").GetValue<bool>() && _e.IsReady();
-            var useR = comboMenu.Item("comboUseR").GetValue<bool>() && _r.IsReady();
-
-            if (target.HasBuffOfType(BuffType.Invulnerability))
-            {
+            var target = TargetSelector.GetTarget(_diplomaticImmunity.Range, TargetSelector.DamageType.Magical);
+            if (target == null || !target.IsValid)
                 return;
-            }
 
-            if (useR && Player.Distance(target.Position) < _r.Range &&
-                ObjectManager.Get<Obj_AI_Hero>().Count(hero => hero.IsValidTarget(_r.Range)) >=
-                Menu.Item("comboLogicR").GetValue<Slider>().Value && Menu.Item("DontUlt" + target.BaseSkinName) != null &&
-                Menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
+            //var qCombo = _menu.Item("useQ").GetValue<bool>();
+            var wCombo = _menu.Item("useW").GetValue<bool>();
+            var eCombo = _menu.Item("useE").GetValue<bool>();
+            var rCombo = _menu.Item("useR").GetValue<bool>();
+            var useIgnite = _menu.Item("useIgnite").GetValue<bool>();
+
+            if (rCombo && _player.Distance(target.Position) < _diplomaticImmunity.Range &&
+                ObjectManager.Get<Obj_AI_Hero>().Count(hero => hero.IsValidTarget(_diplomaticImmunity.Range)) >=
+                _menu.Item("useRLogic").GetValue<Slider>().Value && _menu.Item("DontUlt" + target.BaseSkinName) != null &&
+                _menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
             {
                 UltLogic();
             }
 
-            if (useE && Player.Distance(target.Position) < _e.Range)
+            if (eCombo && _heroicCharge.IsReady() && _player.Distance(target.Position) < _heroicCharge.Range)
             {
-                if (useW)
+                if (wCombo)
                 {
-                    _w.Cast(Player, Packets());
+                    _paragonOfDemacia.Cast();
                 }
                 ELogic();
             }
 
-            if (useQ && Player.Distance(target.Position) < _q.Range)
+            /*
+            if (qCombo && _devastatingBlow.IsReady() && _player.Distance(target.Position) < _devastatingBlow.Range)
             {
-                _q.Cast(Player, Packets());
+                _devastatingBlow.Cast();
             }
+             */
 
-            if (!Menu.Item("miscIgnite").GetValue<bool>() || _igniteSlot == SpellSlot.Unknown ||
-                Player.Spellbook.CanUseSpell(_igniteSlot) != SpellState.Ready)
+            if (_player.Distance(target) <= 600 && GetIgniteDamage(target) >= target.Health && useIgnite)
             {
-                return;
-            }
-
-            if (GetComboDamage(target) > target.Health)
-            {
-                Player.Spellbook.CastSpell(_igniteSlot, target);
+                _player.Spellbook.CastSpell(_ignite, target);
             }
         }
 
-        private static void OnHarass(Obj_AI_Hero target)
+        #endregion
+
+        #region WaveClear
+
+        private static void WaveClear()
         {
-            var harassMenu = Menu.SubMenu("harass");
-            var useQ = harassMenu.Item("harassUseQ").GetValue<bool>() && _q.IsReady();
+            var minion = MinionManager.GetMinions(_player.ServerPosition, _devastatingBlow.Range).FirstOrDefault();
+            if (minion == null || minion.Name.ToLower().Contains("ward")) return;
 
-            if (useQ && Player.Distance(target.Position) < _q.Range)
+            var qWc = _menu.Item("useQWC").GetValue<bool>();
+            var eWc = _menu.Item("useEWC").GetValue<bool>();
+
+            if (qWc && minion.IsValidTarget() && _devastatingBlow.IsReady())
             {
-                _q.Cast(Player, Packets());
+                _devastatingBlow.Cast();
+            }
+
+            if (eWc && _heroicCharge.IsReady() && WallCheck(_player, minion))
+            {
+                _heroicCharge.Cast();
             }
         }
 
-        private static void EscapeToMouse()
-        {
-            var miscMenu = Menu.SubMenu("misc");
-            var useW = miscMenu.Item("miscUseW").GetValue<bool>() && _w.IsReady();
+        #endregion
 
-            if (useW)
-            {
-                Orbwalking.Orbwalk(null, Game.CursorPos);
-                _w.Cast(Player, Packets());
-            }
-            else
-            {
-                Orbwalking.Orbwalk(null, Game.CursorPos);
-            }
-        }
+        #region UltLogic
 
         private static void UltLogic()
         {
             Obj_AI_Hero newtarget = null;
-            foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(_r.Range)))
+            foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(_diplomaticImmunity.Range)))
             {
                 if (newtarget == null)
                 {
@@ -200,238 +243,170 @@ namespace BlackPoppy
                     }
                 }
             }
-            _r.Cast(newtarget, Packets());
+            _diplomaticImmunity.Cast(newtarget);
         }
+
+        #endregion
+
+        #region ELogic
 
         private static void ELogic()
         {
             foreach (
-                var hero in from hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(_e.Range))
-                    let prediction = _e.GetPrediction(hero)
-                    where NavMesh.GetCollisionFlags(
-                        prediction.UnitPosition.To2D()
-                            .Extend(ObjectManager.Player.ServerPosition.To2D(), -300)
-                            .To3D())
-                        .HasFlag(CollisionFlags.Wall) || NavMesh.GetCollisionFlags(
-                            prediction.UnitPosition.To2D()
-                                .Extend(ObjectManager.Player.ServerPosition.To2D(),
-                                    -(300/2))
-                                .To3D())
-                            .HasFlag(CollisionFlags.Wall)
-                    select hero)
+                var hero in from hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(_heroicCharge.Range))
+                            let prediction = _heroicCharge.GetPrediction(hero)
+                            where NavMesh.GetCollisionFlags(
+                                prediction.UnitPosition.To2D()
+                                    .Extend(ObjectManager.Player.ServerPosition.To2D(), -300)
+                                    .To3D())
+                                .HasFlag(CollisionFlags.Wall) || NavMesh.GetCollisionFlags(
+                                    prediction.UnitPosition.To2D()
+                                        .Extend(ObjectManager.Player.ServerPosition.To2D(),
+                                            -(300 / 2))
+                                        .To3D())
+                                    .HasFlag(CollisionFlags.Wall)
+                            select hero)
             {
-                _e.Cast(hero, Packets());
+                _heroicCharge.Cast(hero);
             }
         }
 
-        private static void Killsteal(Obj_AI_Hero target)
-        {
-            var killstealMenu = Menu.SubMenu("killsteal");
-            var useQ = killstealMenu.Item("killstealUseQ").GetValue<bool>() && _q.IsReady();
-            var useE = killstealMenu.Item("killstealUseE").GetValue<bool>() && _e.IsReady();
+        #endregion
 
-            if (target.HasBuffOfType(BuffType.Invulnerability))
-            {
-                return;
-            }
-
-            if (useQ && target.Distance(Player.Position) < _q.Range)
-            {
-                if (_q.IsKillable(target))
-                {
-                    _q.Cast(Player, Packets());
-                }
-            }
-
-            if (!useE || !(target.Distance(Player.Position) < _e.Range))
-            {
-                return;
-            }
-
-            if (_e.IsKillable(target))
-            {
-                _e.Cast(target, Packets());
-            }
-        }
-
-        private static void WaveClear()
-        {
-            var waveclearMenu = Menu.SubMenu("waveclear");
-            var useQ = waveclearMenu.Item("wcUseQ").GetValue<bool>() && _q.IsReady();
-            var useW = waveclearMenu.Item("wcUseW").GetValue<bool>() && _w.IsReady();
-            var useE = waveclearMenu.Item("wcUseE").GetValue<bool>() && _e.IsReady();
-
-            var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, _q.Range);
-
-            if (useQ)
-            {
-                if (allMinionsQ.Any(minion => minion.IsValidTarget() &&
-                                              _q.IsKillable(minion)))
-                {
-                    _q.CastOnUnit(Player, Packets());
-                    return;
-                }
-            }
-
-            if (useW && allMinionsQ.Count > 1)
-            {
-                _w.Cast(Player, Packets());
-            }
-
-            if (useE)
-            {
-                foreach (var minion in allMinionsQ.Where(minion => minion.IsValidTarget() &&
-                                                                   HealthPrediction.GetHealthPrediction(minion,
-                                                                       (int)
-                                                                           (Player.Distance(minion.Position)*1000/1450)) <
-                                                                   Player.GetSpellDamage(minion, SpellSlot.E)))
-                {
-                    _e.CastOnUnit(minion, Packets());
-                    return;
-                }
-            }
-
-            var jcreeps = MinionManager.GetMinions(Player.ServerPosition, _e.Range, MinionTypes.All,
-                MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
-            if (jcreeps.Count <= 0)
-            {
-                return;
-            }
-
-            var jcreep = jcreeps[0];
-            if (useQ)
-            {
-                _q.Cast(Player, Packets());
-            }
-
-            if (useW)
-            {
-                _w.Cast(Player, Packets());
-            }
-
-            if (useE)
-            {
-                _e.Cast(jcreep, Packets());
-            }
-        }
-
-        private static float GetComboDamage(Obj_AI_Base enemy)
-        {
-            var damage = 0d;
-            if (_r.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.R);
-            }
-
-            if (_w.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.W);
-            }
-
-            if (_e.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.E);
-            }
-
-            if (_q.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
-            }
-
-            if (_igniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready)
-            {
-                damage += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
-            }
-
-            return (float) damage;
-        }
-
-        private static bool Packets()
-        {
-            return Menu.Item("miscPacket").GetValue<bool>();
-        }
+        #region CreateMenu
 
         private static void CreateMenu()
         {
-            Menu = new Menu("Black" + ChampName, "black" + ChampName, true);
+            _menu = new Menu("Black" + ChampionName, "black" + ChampionName, true);
 
-            // Target selector
-            var ts = new Menu("Target Selector", "ts");
-            Menu.AddSubMenu(ts);
-            TargetSelector.AddToMenu(ts);
+            var targetSelectorMenu = new Menu("Target Selector", "ts");
+            _menu.AddSubMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
 
-            // Orbwalker
-            var orbwalk = new Menu("Orbwalking", "orbwalk");
-            Menu.AddSubMenu(orbwalk);
-            _ow = new Orbwalking.Orbwalker(orbwalk);
+            var orbwalkingMenu = new Menu("Orbwalking", "orbwalk");
+            _menu.AddSubMenu(orbwalkingMenu);
+            _orbwalker = new Orbwalking.Orbwalker(orbwalkingMenu);
 
-            // Combo
-            var combo = new Menu("Combo", "combo");
-            Menu.AddSubMenu(combo);
-            combo.AddItem(new MenuItem("comboUseQ", "Use Q").SetValue(true));
-            combo.AddItem(new MenuItem("comboUseW", "Use W").SetValue(true));
-            combo.AddItem(new MenuItem("comboUseE", "Use E").SetValue(true));
-            combo.AddItem(new MenuItem("comboUseR", "Use R").SetValue(true));
-            combo.AddItem(new MenuItem("comboLogicR", "Enemies in Range to use Ult").SetValue(new Slider(2, 1, 5)));
-            combo.AddItem(new MenuItem("comboActive", "Combo active!").SetValue(new KeyBind(32, KeyBindType.Press)));
-
-            // Harass
-            var harass = new Menu("Harass", "harass");
-            Menu.AddSubMenu(harass);
-            harass.AddItem(new MenuItem("harassUseQ", "Use Q").SetValue(true));
-            harass.AddItem(new MenuItem("harassMana", "Mana To Harass").SetValue(new Slider(40, 100, 0)));
-            harass.AddItem(new MenuItem("harassActive", "Harass active!").SetValue(new KeyBind('C', KeyBindType.Press)));
-
-            // WaveClear
-            var waveclear = new Menu("Waveclear", "waveclear");
-            Menu.AddSubMenu(waveclear);
-            waveclear.AddItem(new MenuItem("wcUseQ", "Use Q").SetValue(true));
-            waveclear.AddItem(new MenuItem("wcUseW", "Use W").SetValue(true));
-            waveclear.AddItem(new MenuItem("wcUseE", "Use E").SetValue(true));
-            waveclear.AddItem(new MenuItem("wcMana", "Mana to Waveclear").SetValue(new Slider(40, 100, 0)));
-            waveclear.AddItem(new MenuItem("wcActive", "Waveclear active!").SetValue(new KeyBind('V', KeyBindType.Press)));
-
-            // Killsteal
-            var killsteal = new Menu("Killsteal", "killsteal");
-            Menu.AddSubMenu(killsteal);
-            killsteal.AddItem(new MenuItem("killstealUseQ", "Use Q").SetValue(true));
-            killsteal.AddItem(new MenuItem("killstealUseE", "Use E").SetValue(true));
-
-            // Misc
-            var misc = new Menu("Misc", "misc");
-            Menu.AddSubMenu(misc);
-            misc.AddItem(new MenuItem("miscPacket", "Use Packets").SetValue(true));
-            misc.AddItem(new MenuItem("miscIgnite", "Use Ignite").SetValue(true));
-            misc.AddItem(
-                new MenuItem("miscEscapeToMouse", "Escape to mouse").SetValue(new KeyBind('G', KeyBindType.Press)));
-            misc.AddItem(new MenuItem("miscUseW", "Use W in Escape to mouse").SetValue(true));
-            misc.AddItem(new MenuItem("DontUlt", "Dont use R on"));
-            misc.AddItem(new MenuItem("sep0", "========="));
-            foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
+            var keybindings = new Menu("Key Bindings", "keybindings");
             {
-                misc.AddItem(new MenuItem("DontUlt" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
+                keybindings.AddItem(new MenuItem("useCombo", "Combo").SetValue(new KeyBind(32, KeyBindType.Press)));
+                keybindings.AddItem(new MenuItem("useWC", "Waveclear").SetValue(new KeyBind('V', KeyBindType.Press)));
+                _menu.AddSubMenu(keybindings);
             }
-            misc.AddItem(new MenuItem("sep1", "========="));
 
-            //Damage after combo:
-            var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Draw damage after combo").SetValue(true);
-            Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
-            Utility.HpBarDamageIndicator.Enabled = dmgAfterComboItem.GetValue<bool>();
-            dmgAfterComboItem.ValueChanged +=
-                delegate(object sender, OnValueChangeEventArgs eventArgs)
+            var combo = new Menu("Combo Options", "combo");
+            {
+                combo.AddItem(new MenuItem("useQ", "Use Devastating Blow (Q)").SetValue(true));
+                combo.AddItem(new MenuItem("useW", "Use Paragon of Demacia  (W)").SetValue(true));
+                combo.AddItem(new MenuItem("useE", "Use Heroic Charge (E)").SetValue(true));
+                combo.AddItem(new MenuItem("useR", "Use Diplomatic Immunity (R)").SetValue(true));
+                combo.AddItem(new MenuItem("useRLogic", "Enemies in Range to use Ult").SetValue(new Slider(2, 1, 5)));
+                combo.AddItem(new MenuItem("useIgnite", "Use Ignite").SetValue(true));
+                _menu.AddSubMenu(combo);
+            }
+
+            var waveclear = new Menu("Waveclear Options", "waveclear");
+            {
+                waveclear.AddItem(new MenuItem("useQWC", "Use Devastating Blow (Q)").SetValue(true));
+                waveclear.AddItem(new MenuItem("useEWC", "Use Heroic Charge (E)").SetValue(true));
+                _menu.AddSubMenu(waveclear);
+            }
+
+            _manaManager.AddToMenu(ref _menu);
+
+            var ult = new Menu("Ult Options", "ult");
+            {
+                ult.AddItem(new MenuItem("DontUlt", "Dont use R on"));
+                ult.AddItem(new MenuItem("sep0", ""));
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != _player.Team))
                 {
-                    Utility.HpBarDamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
-                };
+                    ult.AddItem(new MenuItem("DontUlt" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
+                }
+                ult.AddItem(new MenuItem("sep1", ""));
+                _menu.AddSubMenu(ult);
+            }
+            var misc = new Menu("Misc Options", "misc");
+            {
+                misc.AddItem(new MenuItem("miscInterrupt", "Heroic Charge (E) to Interrupt").SetValue(true));
+                misc.AddItem(new MenuItem("miscGapcloser", "Heroic Charge (E) on Gapcloser near Walls").SetValue(true));
+                _menu.AddSubMenu(misc);
+            }
 
-            // Drawings
-            var drawings = new Menu("Drawings", "drawings");
-            Menu.AddSubMenu(drawings);
-            drawings.AddItem(new MenuItem("drawRangeE", "E range").SetValue(new Circle(false, Color.Aquamarine)));
-            drawings.AddItem(new MenuItem("drawRangeR", "R range").SetValue(new Circle(false, Color.Aquamarine)));
-            drawings.AddItem(dmgAfterComboItem);
+            var drawings = new Menu("Drawing Options", "drawings");
+            {
+                drawings.AddItem(new MenuItem("drawRangeE", "E range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawRangeR", "R range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawDamage", "Draw Spell Damage").SetValue(new Circle(true, Color.GreenYellow)));
+                _menu.AddSubMenu(drawings);
+            }
 
-            // Finalizing
-            Menu.AddToMainMenu();
+            _menu.AddToMainMenu();
         }
+
+        #endregion
+
+        #region Notifications Credits to Beaving.
+        public static Notification ShowNotification(string message, Color color, int duration = -1, bool dispose = true)
+        {
+            var notif = new Notification(message).SetTextColor(color);
+            Notifications.AddNotification(notif);
+            if (dispose)
+            {
+                Utility.DelayAction.Add(duration, () => notif.Dispose());
+            }
+            return notif;
+        }
+        #endregion
+
+        #region WallCheck
+
+        public static bool WallCheck(Obj_AI_Base player, Obj_AI_Base enemy)
+        {
+            var distance = player.Position.Distance(enemy.Position);
+            for (int i = 1; i < 6; i++)
+            {
+                if (player.Position.Extend(enemy.Position, distance + 60 * i).IsWall())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        #endregion
+
+        #region GetComboDamage
+
+        public static float GetComboDamage(Obj_AI_Base enemy)
+        {
+            var damage = 0d;
+
+            if (_devastatingBlow.IsReady())
+            {
+                damage += _player.GetSpellDamage(enemy, SpellSlot.Q);
+            }
+
+            if (_heroicCharge.IsReady())
+            {
+                damage += _player.GetSpellDamage(enemy, SpellSlot.E);
+            }
+
+            return (float)damage;
+        }
+
+        #endregion
+
+        #region GetIgniteDamage
+
+        private static float GetIgniteDamage(Obj_AI_Hero target)
+        {
+            if (_ignite == SpellSlot.Unknown || _player.Spellbook.CanUseSpell(_ignite) != SpellState.Ready)
+            {
+                return 0f;
+            }
+            return (float)_player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+        }
+
+        #endregion
     }
 }
