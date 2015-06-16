@@ -1,383 +1,434 @@
-﻿using System;
+﻿// 
+// LeagueSharp.Common is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with LeagueSharp.Common.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
+using Color = System.Drawing.Color;
 
 namespace BlackWarwick
 {
-    internal class Program
+    public static class Program
     {
-        // Generic
-        public static readonly string ChampName = "Warwick";
-        private static readonly Obj_AI_Hero Player = ObjectManager.Player;
-        // Spells
+        private const string ChampionName = "Warwick";
+        private static Obj_AI_Hero _player;
         private static readonly List<Spell> SpellList = new List<Spell>();
-        private static Spell _q, _w, _e, _r;
-        private static SpellSlot _igniteSlot, _smiteSlot;
-        // Menu
-        public static Menu Menu;
-        private static Orbwalking.Orbwalker _ow;
-        //Credits to metaphorce
-        public static readonly int[] SmiteRed = {3715, 3718, 3717, 3716, 3714};
-        public static readonly int[] SmiteBlue = {3706, 3710, 3709, 3708, 3707};
+        private static Spell _hungeringStrike, _huntersCall, _infiniteDuress;
+        private static SpellSlot _ignite;
+        private static Menu _menu;
+        private static Orbwalking.Orbwalker _orbwalker;
+        private static ManaManager _manaManager;
+
+        #region Main
 
         public static void Main(string[] args)
         {
-            // Register events
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
 
+        #endregion
+
+        #region OnGameLoad
+
         private static void Game_OnGameLoad(EventArgs args)
         {
-            //Champ validation
-            if (Player.ChampionName != ChampName)
+            _player = ObjectManager.Player;
+            if (_player.ChampionName != ChampionName)
             {
                 return;
             }
 
-            //Define spells
-            _q = new Spell(SpellSlot.Q, 400);
-            _w = new Spell(SpellSlot.W, 1000);
-            _e = new Spell(SpellSlot.E, 1500);
-            _r = new Spell(SpellSlot.R, 700);
-            SpellList.AddRange(new[] {_q, _w, _e, _r});
+            DamageIndicator.Initialize(GetComboDamage);
+            DamageIndicator.Enabled = true;
+            DamageIndicator.DrawingColor = Color.Green;
 
-            _igniteSlot = Player.GetSpellSlot("SummonerDot");
-            _smiteSlot = SpellSlot.Unknown;
+            _hungeringStrike = new Spell(SpellSlot.Q, 400);
+            _huntersCall = new Spell(SpellSlot.W, 1250);
+            _infiniteDuress = new Spell(SpellSlot.R, 700);
 
-            // Finetune spells
-            _r.SetTargetted(0.5f, float.MaxValue);
+            SpellList.AddRange(new[] { _hungeringStrike, _huntersCall, _infiniteDuress});
 
-            // Create menu
+            _ignite = _player.GetSpellSlot("summonerdot");
+
+            _manaManager = new ManaManager();
+
             CreateMenu();
 
-            // Set smiteslot
-            SetSmiteSlot();
-
-            // Register events
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
+            Orbwalking.OnAttack += OnAttack;
 
-            // Print
-            Game.PrintChat(
-                String.Format("<font color='#08F5F8'>blacky -</font> <font color='#FFFFFF'>{0} Loaded!</font>",
-                    ChampName));
+            ShowNotification("BlackWarwick by blacky - Loaded", Color.Crimson, 10000);
+            ShowNotification("ManaManager by iJabba", Color.Crimson, 10000);
         }
+
+        #endregion
+
+        #region OnAttack
+
+        private static void OnAttack(AttackableUnit unit, AttackableUnit target)
+        {
+            if (!_huntersCall.IsReady())
+            {
+                return;
+            }
+
+            if (((_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && _menu.Item("useW").GetValue<bool>() ||
+                  _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && _menu.Item("useWHarass").GetValue<bool>())) &&
+                target is Obj_AI_Hero ||
+                (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && _menu.Item("useWWC").GetValue<bool>() && target is Obj_AI_Minion))
+            {
+                _huntersCall.Cast();
+            }
+        }
+
+        #endregion
+
+        #region OnDraw
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            // Spell ranges
             foreach (var spell in SpellList)
             {
-                // Regular spell ranges
-                var circleEntry = Menu.Item("drawRange" + spell.Slot).GetValue<Circle>();
-                if (circleEntry.Active)
+                var circleEntry = _menu.Item("drawRange" + spell.Slot).GetValue<Circle>();
+                if (circleEntry.Active && !_player.IsDead)
                 {
-                    Render.Circle.DrawCircle(Player.Position, spell.Range, circleEntry.Color);
+                    Render.Circle.DrawCircle(_player.Position, spell.Range, circleEntry.Color);
                 }
             }
+
+            Circle damageCircle = _menu.Item("drawDamage").GetValue<Circle>();
+
+            DamageIndicator.DrawingColor = damageCircle.Color;
+            DamageIndicator.Enabled = damageCircle.Active;
         }
+
+        #endregion
+
+        #region OnGameUpdate
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            var target = TargetSelector.GetTarget(_r.Range, TargetSelector.DamageType.Magical);
-
-            // Combo
-            if (Menu.SubMenu("combo").Item("comboActive").GetValue<KeyBind>().Active)
+            switch (_orbwalker.ActiveMode)
             {
-                OnCombo(target);
+                case Orbwalking.OrbwalkingMode.Combo:
+                    OnCombo();
+                    break;
+                case Orbwalking.OrbwalkingMode.LaneClear:
+                    WaveClear();
+                    break;
+                case Orbwalking.OrbwalkingMode.Mixed:
+                    OnHarass();
+                    break;
             }
 
-            // Harass
-            if (Menu.SubMenu("harass").Item("harassActive").GetValue<KeyBind>().Active &&
-                (Player.Mana/Player.MaxMana*100) >
-                Menu.Item("harassMana").GetValue<Slider>().Value)
-            {
-                OnHarass(target);
-            }
-
-            // WaveClear
-            if (Menu.SubMenu("waveclear").Item("wcActive").GetValue<KeyBind>().Active &&
-                (Player.Mana/Player.MaxMana*100) >
-                Menu.Item("wcMana").GetValue<Slider>().Value)
-            {
-                WaveClear();
-            }
-
-            // Killsteal
-            Killsteal(target);
+            Killsteal();
         }
 
-        private static void OnCombo(Obj_AI_Hero target)
+        #endregion
+
+        #region Combo
+
+        private static void OnCombo()
         {
-            var comboMenu = Menu.SubMenu("combo");
-            var useQ = comboMenu.Item("comboUseQ").GetValue<bool>() && _q.IsReady();
-            var useW = comboMenu.Item("comboUseW").GetValue<bool>() && _w.IsReady();
-            var useR = comboMenu.Item("comboUseR").GetValue<bool>() && _r.IsReady();
-
-            if (target.HasBuffOfType(BuffType.Invulnerability))
-            {
+            var target = TargetSelector.GetTarget(_infiniteDuress.Range, TargetSelector.DamageType.Magical);
+            if (target == null || !target.IsValid)
                 return;
+
+            var qCombo = _menu.Item("useQ").GetValue<bool>();
+            var rCombo = _menu.Item("useR").GetValue<bool>();
+            var useRSmite = _menu.Item("useRSmite").GetValue<bool>();
+            var useIgnite = _menu.Item("useIgnite").GetValue<bool>();
+
+            if (useRSmite && _player.GetSpellSlot(GetSmiteName()).IsReady() && rCombo &&
+                _menu.Item("DontUlt" + target.BaseSkinName) != null &&
+                _menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
+            {
+                _player.Spellbook.CastSpell(_player.GetSpellSlot(GetSmiteName()), target);
             }
 
-            if (useW && Player.Distance(target.Position) < _r.Range)
+            if (rCombo && _infiniteDuress.IsReady() && _player.Distance(target) <= _infiniteDuress.Range)
             {
-                _w.Cast(Player, Packets());
-            }
-
-            if (Menu.Item("miscSmite").GetValue<bool>() && _smiteSlot != SpellSlot.Unknown &&
-                Player.Spellbook.CanUseSpell(_smiteSlot) == SpellState.Ready && useR &&
-                Menu.Item("DontUlt" + target.BaseSkinName) != null &&
-                Menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
-            {
-                Player.Spellbook.CastSpell(_smiteSlot, target);
-            }
-
-            if (useR && Player.Distance(target.Position) < _r.Range)
-            {
-                if (Menu.Item("DontUlt" + target.BaseSkinName) != null &&
-                    Menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
-                    _r.Cast(target, Packets());
-            }
-
-            if (useQ && Player.Distance(target.Position) < _q.Range)
-            {
-                _q.Cast(target, Packets());
-            }
-
-            if (!Menu.Item("miscIgnite").GetValue<bool>() || _igniteSlot == SpellSlot.Unknown ||
-                Player.Spellbook.CanUseSpell(_igniteSlot) != SpellState.Ready)
-            {
-                return;
-            }
-
-            if (GetComboDamage(target) > target.Health)
-            {
-                Player.Spellbook.CastSpell(_igniteSlot, target);
-            }
-        }
-
-        private static void OnHarass(Obj_AI_Hero target)
-        {
-            var harassMenu = Menu.SubMenu("harass");
-            var useQ = harassMenu.Item("harassUseQ").GetValue<bool>() && _q.IsReady();
-            if (target.HasBuffOfType(BuffType.Invulnerability))
-            {
-                return;
-            }
-
-            if (useQ && Player.Distance(target.Position) < _q.Range)
-            {
-                _q.Cast(target, Packets());
-            }
-        }
-
-        private static void Killsteal(Obj_AI_Hero target)
-        {
-            var killstealMenu = Menu.SubMenu("killsteal");
-            var useQ = killstealMenu.Item("killstealUseQ").GetValue<bool>() && _q.IsReady();
-            var useR = killstealMenu.Item("killstealUseR").GetValue<bool>() && _r.IsReady();
-
-            if (target.HasBuffOfType(BuffType.Invulnerability))
-            {
-                return;
-            }
-
-            if (useQ && target.Distance(Player.Position) < _q.Range)
-            {
-                if (_q.IsKillable(target))
+                if (_menu.Item("DontUlt" + target.BaseSkinName) != null &&
+                    _menu.Item("DontUlt" + target.BaseSkinName).GetValue<bool>() == false)
                 {
-                    _q.Cast(target, Packets());
+                    _infiniteDuress.Cast(target);
                 }
             }
 
-            if (!useR || !(target.Distance(Player.Position) < _r.Range))
+            if (qCombo && _hungeringStrike.IsReady() && _player.Distance(target) <= _hungeringStrike.Range)
             {
-                return;
+                _hungeringStrike.Cast(target);
             }
 
-            if (_r.IsKillable(target))
+            if (_player.Distance(target) <= 600 && GetIgniteDamage(target) >= target.Health && useIgnite)
             {
-                _r.Cast(target, Packets());
+                _player.Spellbook.CastSpell(_ignite, target);
             }
         }
+
+        #endregion
+
+        #region Harass
+
+        private static void OnHarass()
+        {
+            var target = TargetSelector.GetTarget(_hungeringStrike.Range, TargetSelector.DamageType.Magical);
+            if (target == null || !target.IsValid)
+                return;
+
+            var qHarass = _menu.Item("useQHarass").GetValue<bool>();
+
+            if (qHarass && _hungeringStrike.IsReady() && _player.Distance(target) <= _hungeringStrike.Range)
+            {
+                _hungeringStrike.Cast(target);
+            }
+        }
+
+        #endregion
+
+        #region WaveClear
 
         private static void WaveClear()
         {
-            var waveclearMenu = Menu.SubMenu("waveclear");
-            var useQ = waveclearMenu.Item("wcUseQ").GetValue<bool>() && _q.IsReady();
-            var useW = waveclearMenu.Item("wcUseW").GetValue<bool>() && _w.IsReady();
+            var minion = MinionManager.GetMinions(_player.ServerPosition, _hungeringStrike.Range).FirstOrDefault();
+            if (minion == null || minion.Name.ToLower().Contains("ward")) return;
 
-            var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, _q.Range);
+            var qWc = _menu.Item("useQWC").GetValue<bool>();
 
-            if (useQ)
+            if (qWc && minion.IsValidTarget() && _hungeringStrike.IsKillable(minion) && _hungeringStrike.IsReady())
             {
-                foreach (var minion in allMinionsQ.Where(minion => minion.IsValidTarget() &&
-                                                                   _q.IsKillable(minion)))
+                _hungeringStrike.Cast(minion);
+            }
+        }
+
+        #endregion
+
+        #region KillSteal
+
+        private static void Killsteal()
+        {
+            if (_menu.Item("killstealQ").GetValue<bool>())
+            {
+                var hungeringStrikeTarget = _hungeringStrike.GetTarget();
+
+                if (hungeringStrikeTarget != null && _hungeringStrike.IsKillable(hungeringStrikeTarget) &&
+                    _hungeringStrike.IsReady())
                 {
-                    _q.CastOnUnit(minion, Packets());
-                    return;
+                    _hungeringStrike.Cast(hungeringStrikeTarget);
                 }
             }
 
-            if (useW && allMinionsQ.Count > 1)
+            if (_menu.Item("killstealR").GetValue<bool>())
             {
-                _w.Cast(Player, Packets());
+                var infiniteDuressTarget = _infiniteDuress.GetTarget();
+
+                if (infiniteDuressTarget != null && _infiniteDuress.IsKillable(infiniteDuressTarget) &&
+                    _infiniteDuress.IsReady())
+                {
+                    _hungeringStrike.Cast(infiniteDuressTarget);
+                }
             }
 
-            var jcreeps = MinionManager.GetMinions(Player.ServerPosition, _q.Range, MinionTypes.All,
-                MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
-            if (jcreeps.Count <= 0)
+            if (_menu.Item("killstealIgnite").GetValue<bool>())
             {
-                return;
+                var target = TargetSelector.GetTarget(600, TargetSelector.DamageType.True);
+
+                if (_player.Distance(target) <= 600 && GetIgniteDamage(target) >= target.Health)
+                {
+                    _player.Spellbook.CastSpell(_ignite, target);
+                }
             }
 
-            var jcreep = jcreeps[0];
-
-            if (useQ)
+            if (_menu.Item("killstealSmite").GetValue<bool>())
             {
-                _q.Cast(jcreep, Packets());
-            }
+                var target = TargetSelector.GetTarget(760, TargetSelector.DamageType.True);
 
-            if (useW)
-            {
-                _w.Cast(Player, Packets());
-            }
-        }
-
-        private static float GetComboDamage(Obj_AI_Base enemy)
-        {
-            var damage = 0d;
-            damage += Player.GetAutoAttackDamage(enemy);
-
-            if (_r.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.R);
-            }
-
-            if (_q.IsReady())
-            {
-                damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
-            }
-
-            if (_igniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready)
-            {
-                damage += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
-            }
-
-            return (float) damage;
-        }
-
-        private static bool Packets()
-        {
-            return Menu.Item("miscPacket").GetValue<bool>();
-        }
-
-        public static string SmiteType()
-        {
-            if (SmiteBlue.Any(itemId => Items.HasItem(itemId)))
-            {
-                return "s5_summonersmiteplayerganker";
-            }
-
-            return SmiteRed.Any(itemId => Items.HasItem(itemId)) ? "s5_summonersmiteduel" : "summonersmite";
-        }
-
-        public static void SetSmiteSlot()
-        {
-            foreach (
-                var spell in
-                    ObjectManager.Player.Spellbook.Spells.Where(
-                        spell => String.Equals(spell.Name, SmiteType(), StringComparison.CurrentCultureIgnoreCase)))
-            {
-                _smiteSlot = spell.Slot;
-                return;
+                if (_player.Distance(target) <= 760 && _player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Smite) >= target.Health)
+                {
+                    _player.Spellbook.CastSpell(_player.GetSpellSlot(GetSmiteName()), target);
+                }
             }
         }
 
-        //Credits to metaphorce
+        #endregion
+
+        #region CreateMenu
 
         private static void CreateMenu()
         {
-            Menu = new Menu("Black" + ChampName, "black" + ChampName, true);
+            _menu = new Menu("Black" + ChampionName, "black" + ChampionName, true);
 
-            // Target selector
-            var ts = new Menu("Target Selector", "ts");
-            Menu.AddSubMenu(ts);
-            TargetSelector.AddToMenu(ts);
+            var targetSelectorMenu = new Menu("Target Selector", "ts");
+            _menu.AddSubMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
 
-            // Orbwalker
-            var orbwalk = new Menu("Orbwalking", "orbwalk");
-            Menu.AddSubMenu(orbwalk);
-            _ow = new Orbwalking.Orbwalker(orbwalk);
+            var orbwalkingMenu = new Menu("Orbwalking", "orbwalk");
+            _menu.AddSubMenu(orbwalkingMenu);
+            _orbwalker = new Orbwalking.Orbwalker(orbwalkingMenu);
 
-            // Combo
-            var combo = new Menu("Combo", "combo");
-            Menu.AddSubMenu(combo);
-            combo.AddItem(new MenuItem("comboUseQ", "Use Q").SetValue(true));
-            combo.AddItem(new MenuItem("comboUseW", "Use W").SetValue(true));
-            combo.AddItem(new MenuItem("comboUseR", "Use R").SetValue(true));
-            combo.AddItem(new MenuItem("comboActive", "Combo active!").SetValue(new KeyBind(32, KeyBindType.Press)));
-
-            // Harass
-            var harass = new Menu("Harass", "harass");
-            Menu.AddSubMenu(harass);
-            harass.AddItem(new MenuItem("harassUseQ", "Use Q").SetValue(true));
-            harass.AddItem(new MenuItem("harassMana", "Mana To Harass").SetValue(new Slider(40, 100, 0)));
-            harass.AddItem(new MenuItem("harassActive", "Harass active!").SetValue(new KeyBind('C', KeyBindType.Press)));
-
-            // WaveClear
-            var waveclear = new Menu("Waveclear", "waveclear");
-            Menu.AddSubMenu(waveclear);
-            waveclear.AddItem(new MenuItem("wcUseQ", "Use Q").SetValue(true));
-            waveclear.AddItem(new MenuItem("wcUseW", "Use W").SetValue(true));
-            waveclear.AddItem(new MenuItem("wcMana", "Mana to Waveclear").SetValue(new Slider(40, 100, 0)));
-            waveclear.AddItem(new MenuItem("wcActive", "Waveclear active!").SetValue(new KeyBind('V', KeyBindType.Press)));
-
-            // Killsteal
-            var killsteal = new Menu("Killsteal", "killsteal");
-            Menu.AddSubMenu(killsteal);
-            killsteal.AddItem(new MenuItem("killstealUseQ", "Use Q").SetValue(true));
-            killsteal.AddItem(new MenuItem("killstealUseR", "Use R").SetValue(false));
-
-            // Misc
-            var misc = new Menu("Misc", "misc");
-            Menu.AddSubMenu(misc);
-            misc.AddItem(new MenuItem("miscPacket", "Use Packets").SetValue(true));
-            misc.AddItem(new MenuItem("miscSmite", "Use Smite in Combo").SetValue(true));
-            misc.AddItem(new MenuItem("miscIgnite", "Use Ignite").SetValue(true));
-            misc.AddItem(new MenuItem("DontUlt", "Dont use R on"));
-            misc.AddItem(new MenuItem("sep0", "========="));
-            foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
+            var keybindings = new Menu("Key Bindings", "keybindings");
             {
-                misc.AddItem(new MenuItem("DontUlt" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
+                keybindings.AddItem(new MenuItem("useCombo", "Combo").SetValue(new KeyBind(32, KeyBindType.Press)));
+                keybindings.AddItem(new MenuItem("useHarass", "Harass").SetValue(new KeyBind('C', KeyBindType.Press)));
+                keybindings.AddItem(new MenuItem("useWC", "Waveclear").SetValue(new KeyBind('V', KeyBindType.Press)));
+                _menu.AddSubMenu(keybindings);
             }
-            misc.AddItem(new MenuItem("sep1", "========="));
 
+            var combo = new Menu("Combo Options", "combo");
+            {
+                combo.AddItem(new MenuItem("useQ", "Use Hungering Strike (Q)").SetValue(true));
+                combo.AddItem(new MenuItem("useW", "Use Hunters Call (W)").SetValue(true));
+                combo.AddItem(new MenuItem("useR", "Use Infinite Duress (R)").SetValue(true));
+                combo.AddItem(new MenuItem("useRSmite", "Use Smite before Infinite Duress (R)").SetValue(true));
+                combo.AddItem(new MenuItem("useIgnite", "Use Ignite").SetValue(true));
+                _menu.AddSubMenu(combo);
+            }
 
-            //Damage after combo
-            var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Draw damage after combo").SetValue(true);
-            Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
-            Utility.HpBarDamageIndicator.Enabled = dmgAfterComboItem.GetValue<bool>();
-            dmgAfterComboItem.ValueChanged +=
-                delegate(object sender, OnValueChangeEventArgs eventArgs)
+            var harass = new Menu("Harass Options", "harass");
+            {
+                harass.AddItem(new MenuItem("useQHarass", "Use Hungering Strike (Q").SetValue(true));
+                harass.AddItem(new MenuItem("useWHarass", "Use Hunters Call (W)").SetValue(true));
+                _menu.AddSubMenu(harass);
+            }
+
+            var waveclear = new Menu("Waveclear Options", "waveclear");
+            {
+                waveclear.AddItem(new MenuItem("useQWC", "Use Hungering Strike (Q").SetValue(true));
+                waveclear.AddItem(new MenuItem("useWWC", "Use Hunters Call (W)").SetValue(true));
+                _menu.AddSubMenu(waveclear);
+            }
+
+            _manaManager.AddToMenu(ref _menu);
+
+            var ult = new Menu("Ult Options", "ult");
+            {
+                ult.AddItem(new MenuItem("DontUlt", "Dont use R on"));
+                ult.AddItem(new MenuItem("sep0", ""));
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != _player.Team))
                 {
-                    Utility.HpBarDamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
-                };
+                    ult.AddItem(new MenuItem("DontUlt" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
+                }
+                ult.AddItem(new MenuItem("sep1", ""));
+                _menu.AddSubMenu(ult);
+            }
 
-            // Drawings
-            var drawings = new Menu("Drawings", "drawings");
-            Menu.AddSubMenu(drawings);
-            drawings.AddItem(new MenuItem("drawRangeQ", "Q range").SetValue(new Circle(true, Color.Aquamarine)));
-            drawings.AddItem(new MenuItem("drawRangeW", "W range").SetValue(new Circle(false, Color.Aquamarine)));
-            drawings.AddItem(new MenuItem("drawRangeE", "E range").SetValue(new Circle(false, Color.Aquamarine)));
-            drawings.AddItem(new MenuItem("drawRangeR", "R range").SetValue(new Circle(false, Color.Aquamarine)));
-            drawings.AddItem(dmgAfterComboItem);
+            var misc = new Menu("Misc Options", "misc");
+            {
+                var killsteal = new Menu("Killsteal Options", "killsteal");
+                {
+                    killsteal.AddItem(new MenuItem("killstealQ", "Hungering Strike (Q) to Killsteal").SetValue(true));
+                    killsteal.AddItem(new MenuItem("killstealR", "Infinite Duress (R) to Killsteal").SetValue(false));
+                    killsteal.AddItem(new MenuItem("killstealIgnite", "Ignite to Killsteal").SetValue(true));
+                    killsteal.AddItem(new MenuItem("killstealSmite", "Smite to Killsteal").SetValue(true));
+                }
+                _menu.AddSubMenu(misc);
+            }
 
-            // Finalizing
-            Menu.AddToMainMenu();
+            var drawings = new Menu("Drawing Options", "drawings");
+            {
+                drawings.AddItem(new MenuItem("drawRangeQ", "Q range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawRangeW", "W range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawRangeR", "R range").SetValue(new Circle(true, Color.Aquamarine)));
+                drawings.AddItem(new MenuItem("drawDamage", "Draw Spell Damage").SetValue(new Circle(true, Color.GreenYellow)));
+                _menu.AddSubMenu(drawings);
+            }
+
+            _menu.AddToMainMenu();
         }
+
+        #endregion
+
+        #region Notifications Credits to Beaving.
+        public static Notification ShowNotification(string message, Color color, int duration = -1, bool dispose = true)
+        {
+            var notif = new Notification(message).SetTextColor(color);
+            Notifications.AddNotification(notif);
+            if (dispose)
+            {
+                Utility.DelayAction.Add(duration, () => notif.Dispose());
+            }
+            return notif;
+        }
+        #endregion
+
+        #region GetSmiteName
+
+        private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3726, 3723 };
+        private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719 };
+        private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714 };
+        private static readonly int[] SmiteBlue = { 3706, 3710, 3709, 3708, 3707 };
+
+
+        private static string GetSmiteName()
+        {
+            if (SmiteBlue.Any(a => Items.HasItem(a)))
+            {
+                return "s5_summonersmiteplayerganker";
+            }
+            if (SmiteRed.Any(a => Items.HasItem(a)))
+            {
+                return "s5_summonersmiteduel";
+            }
+            if (SmiteGrey.Any(a => Items.HasItem(a)))
+            {
+                return "s5_summonersmitequick";
+            }
+            if (SmitePurple.Any(a => Items.HasItem(a)))
+            {
+                return "itemsmiteaoe";
+            }
+            return "summonersmite";
+        }
+
+        #endregion
+
+        #region GetComboDamage
+
+        public static float GetComboDamage(Obj_AI_Base enemy)
+        {
+            var damage = 0d;
+
+            if (_infiniteDuress.IsReady())
+            {
+                damage += _player.GetSpellDamage(enemy, SpellSlot.R);
+            }
+
+            if (_hungeringStrike.IsReady())
+            {
+                damage += _player.GetSpellDamage(enemy, SpellSlot.Q);
+            }
+
+            if (_player.GetSpellSlot(GetSmiteName()).IsReady())
+            {
+                damage += _player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Smite);
+            }
+
+            return (float)damage;
+        }
+
+        #endregion
+
+        #region GetIgniteDamage
+
+        private static float GetIgniteDamage(Obj_AI_Hero target)
+        {
+            if (_ignite == SpellSlot.Unknown || _player.Spellbook.CanUseSpell(_ignite) != SpellState.Ready)
+            {
+                return 0f;
+            }
+            return (float)_player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+        }
+
+        #endregion
     }
 }
