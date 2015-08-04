@@ -11,7 +11,7 @@ namespace BlackFeeder
             Menu = new Menu("BlackFeeder 2.0", "BlackFeeder", true);
 
             Menu.AddItem(new MenuItem("Feeding.Activated", "Feeding Activated").SetValue(true));
-            Menu.AddItem(new MenuItem("Feeding.FeedMode", "Feeding Mode:").SetValue(new StringList(new[] { "Bottom Lane", "Middle Lane", "Top Lane" })));
+            Menu.AddItem(new MenuItem("Feeding.FeedMode", "Feeding Mode:").SetValue(new StringList(new[] { "Middle Lane", "Bottom Lane", "Top Lane" })));
 
             var feedingMenu = Menu.AddSubMenu(new Menu("Feeding Options", "FeedingMenu"));
             {

@@ -319,17 +319,11 @@
                     {
                         if (player.Team == GameObjectTeam.Order)
                         {
-                            if (!BotVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, BotVector3);
-                            else if (BotVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
+                            player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
                         }
                         else
                         {
-                            if (!BotVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, BotVector3);
-                            else if (BotVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
+                            player.IssueOrder(GameObjectOrder.MoveTo, BlueSpawn);
                         }
                     }
                     break;
@@ -337,11 +331,17 @@
                     {
                         if (player.Team == GameObjectTeam.Order)
                         {
-                            player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
+                            if (!BotVectorReached)
+                                player.IssueOrder(GameObjectOrder.MoveTo, BotVector3);
+                            else if (BotVectorReached)
+                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
                         }
                         else
                         {
-                            player.IssueOrder(GameObjectOrder.MoveTo, BlueSpawn);
+                            if (!BotVectorReached)
+                                player.IssueOrder(GameObjectOrder.MoveTo, BotVector3);
+                            else if (BotVectorReached)
+                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
                         }
                     }
                     break;
