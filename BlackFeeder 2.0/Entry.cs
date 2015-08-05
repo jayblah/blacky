@@ -1,13 +1,14 @@
-﻿namespace BlackFeeder
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using LeagueSharp;
+using LeagueSharp.Common;
+
+using SharpDX;
+
+namespace BlackFeeder
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
-    using LeagueSharp;
-    using LeagueSharp.Common;
-
-    using SharpDX;
 
     using Color = System.Drawing.Color;
     using Menu = LeagueSharp.Common.Menu;
@@ -180,8 +181,6 @@
 
         public static Menu Menu;
 
-        private static readonly bool[] BoughtItems = { false, false, false, false };
-
         private static string[] deaths;
 
         private static Obj_AI_Hero player;
@@ -221,6 +220,7 @@
                 ShowNotification("BlackFeeder by blacky - Loaded", Color.Crimson, 10000);
 
                 InitializeMenu.Load();
+                SRShopAI.Main.Init(); //Credits to Insensitivity for his amazing "ARAMShopAI" assembly
                 Game.OnUpdate += OnUpdate;
                 Game.OnEnd += OnEnd;
             }
@@ -236,7 +236,7 @@
 
         private static void OnUpdate(EventArgs args)
         {
-            if (InitializeMenu.Menu.Item("Feeding.Activated").GetValue<bool>())
+            if (Menu.Item("Feeding.Activated").GetValue<bool>())
             {
                 Feed();
             }
@@ -271,47 +271,11 @@
 
         #endregion
 
-        #region Items
-
-        private static void Items()
-        {
-            if (player.InShop() && player.Gold >= 325 && !BoughtItems[0])
-            {
-                player.BuyItem(ItemId.Boots_of_Speed);
-                BoughtItems[0] = true;
-            }
-
-            if (player.InShop() && player.Gold >= 475 && BoughtItems[0] && !BoughtItems[1])
-            {
-                player.BuyItem(ItemId.Boots_of_Mobility);
-                BoughtItems[1] = true;
-            }
-
-            if (player.InShop() && player.Gold >= 475 && BoughtItems[1] && !BoughtItems[2])
-            {
-                player.BuyItem(ItemId.Boots_of_Mobility_Enchantment_Homeguard);
-                BoughtItems[2] = true;
-            }
-
-            if (player.InShop() && player.Gold >= 950 && BoughtItems[2] && !BoughtItems[3])
-            {
-                player.BuyItem(ItemId.Aether_Wisp);
-                BoughtItems[3] = true;
-            }
-
-            if (player.InShop() && player.Gold >= 1100 && BoughtItems[3])
-            {
-                player.BuyItem(ItemId.Zeal);
-            }
-        }
-
-        #endregion
-
         #region Feed
 
         private static void Feed()
         {
-            var feedingMode = InitializeMenu.Menu.Item("Feeding.FeedMode").GetValue<StringList>().SelectedIndex;
+            var feedingMode = Menu.Item("Feeding.FeedMode").GetValue<StringList>().SelectedIndex;
 
             switch (feedingMode)
             {
@@ -341,7 +305,7 @@
                             if (!BotVectorReached)
                                 player.IssueOrder(GameObjectOrder.MoveTo, BotVector3);
                             else if (BotVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
+                                player.IssueOrder(GameObjectOrder.MoveTo, BlueSpawn);
                         }
                     }
                     break;
@@ -359,30 +323,25 @@
                             if (!TopVectorReached)
                                 player.IssueOrder(GameObjectOrder.MoveTo, TopVector3);
                             else if (TopVectorReached)
-                                player.IssueOrder(GameObjectOrder.MoveTo, PurpleSpawn);
+                                player.IssueOrder(GameObjectOrder.MoveTo, BlueSpawn);
                         }
                     }
                     break;
             }
 
-            if (InitializeMenu.Menu.Item("Spells.Activated").GetValue<bool>())
+            if (Menu.Item("Spells.Activated").GetValue<bool>())
             {
                 Spells();
             }
 
-            if (InitializeMenu.Menu.Item("Messages.Activated").GetValue<bool>())
+            if (Menu.Item("Messages.Activated").GetValue<bool>())
             {
                 Messages();
             }
 
-            if (InitializeMenu.Menu.Item("Laugh.Activated").GetValue<bool>())
+            if (Menu.Item("Laugh.Activated").GetValue<bool>())
             {
                 Laughing();
-            }
-
-            if (InitializeMenu.Menu.Item("Items.Activated").GetValue<bool>())
-            {
-                Items();
             }
         }
 
