@@ -48,7 +48,7 @@ namespace BlackFeeder.SRShopAI
             response.Close();
             return responseFromServer;
         }
-        public static string[] List = new[] {"Boots of Speed","Boots of Mobility","Aether Wisp","Aether Wisp","Aether Wisp","Aether Wisp","Zeal"};
+        public static string[] List = new[] { "Boots of Speed", "Boots of Mobility", "Aether Wisp", "Zeal", "Zeal", "Zeal", "Zeal" };
 
         public static Queue<Item> Queue = new Queue<Item>();
         public static bool CanBuy = true;

@@ -194,6 +194,9 @@ namespace BlackFeeder
         public static bool TopVectorReached;
         public static bool BotVectorReached;
 
+        private static bool surrenderActive;
+        private static int surrenderTime;
+
         private static int lastLaugh;
         private static double lastTouchdown;
         private static double timeDead;
@@ -239,6 +242,11 @@ namespace BlackFeeder
             if (Menu.Item("Feeding.Activated").GetValue<bool>())
             {
                 Feed();
+            }
+
+            if (Menu.Item("Surrender.Activated").GetValue<bool>())
+            {
+                Surrender(); 
             }
 
             if (player.IsDead || player.InFountain())
@@ -428,6 +436,28 @@ namespace BlackFeeder
                 {
                     Game.Say("/all TOUCHDOWN!");
                     lastTouchdown = Game.Time;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Surrender
+
+        private static void Surrender()
+        {
+            if (Game.ClockTime >= 1200 && !surrenderActive)
+            {
+                Game.Say("/ff");
+                surrenderActive = true;
+                surrenderTime = Environment.TickCount;
+            }
+
+            if (surrenderActive)
+            {
+                if (Environment.TickCount - surrenderTime > 180000)
+                {
+                    surrenderActive = false;
                 }
             }
         }

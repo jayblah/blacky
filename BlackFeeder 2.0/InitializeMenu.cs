@@ -19,6 +19,12 @@ namespace BlackFeeder
                 feedingMenu.AddItem(new MenuItem("Laugh.Activated", "Laugh Activated").SetValue(true));
                 feedingMenu.AddItem(new MenuItem("Items.Activated", "Items Activated").SetValue(true));
             }
+
+            var miscMenu = Entry.Menu.AddSubMenu(new Menu("Misc Options", "MiscMenu"));
+            {
+                miscMenu.AddItem(new MenuItem("Surrender.Activated", "Auto Surrender Activated").SetValue(true));
+            }
+
             Entry.Menu.AddItem(new MenuItem("seperator", ""));
             Entry.Menu.AddItem(new MenuItem("by.blacky", "Made by blacky"));
 
