@@ -196,6 +196,7 @@ namespace BlackFeeder
 
         private static bool surrenderActive;
         private static int surrenderTime;
+        private static float realTime;
 
         private static int lastLaugh;
         private static double lastTouchdown;
@@ -219,6 +220,11 @@ namespace BlackFeeder
                 player = ObjectManager.Player;
                 ghostSlot = player.GetSpellSlot("SummonerHaste");
                 healSlot = player.GetSpellSlot("SummonerHeal");
+
+                if (player.Gold >= 0)
+                {
+                    realTime = Game.ClockTime;
+                }
 
                 ShowNotification("BlackFeeder by blacky - Loaded", Color.Crimson, 10000);
 
@@ -446,7 +452,7 @@ namespace BlackFeeder
 
         private static void Surrender()
         {
-            if (Game.ClockTime >= 1200 && !surrenderActive)
+            if (Game.ClockTime - realTime >= 1200 && !surrenderActive)
             {
                 Game.Say("/ff");
                 surrenderActive = true;
