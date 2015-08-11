@@ -194,6 +194,8 @@ namespace BlackFeeder
         public static bool TopVectorReached;
         public static bool BotVectorReached;
 
+        private static int globalRand;
+
         private static bool surrenderActive;
         private static int surrenderTime;
         private static float realTime;
@@ -290,6 +292,27 @@ namespace BlackFeeder
         private static void Feed()
         {
             var feedingMode = Menu.Item("Feeding.FeedMode").GetValue<StringList>().SelectedIndex;
+
+            if (feedingMode == 3 && globalRand == -1)
+            {
+                var rnd = new Random();
+                globalRand = rnd.Next(0, 3);
+            }
+
+            if (feedingMode != 3)
+            {
+                globalRand = -1;
+            }
+
+            if (player.IsDead)
+            {
+                globalRand = -1;
+            }
+
+            if (globalRand != -1)
+            {
+                feedingMode = globalRand;
+            }
 
             switch (feedingMode)
             {
