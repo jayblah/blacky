@@ -31,7 +31,8 @@ namespace Lissandra_the_Ice_Goddess
                     return;
                 }
 
-                ShowNotification("Ice Goddess by blacky & Asuna - Loaded", Color.Crimson, 10000);
+                ShowNotification("Lissandra the Ice Goddess", Color.DeepSkyBlue, 10000);
+                ShowNotification("by blacky & Asuna - Loaded", Color.DeepSkyBlue, 10000);
 
                 DamageIndicator.Initialize(GetComboDamage);
                 DamageIndicator.Enabled = true;
@@ -41,7 +42,7 @@ namespace Lissandra_the_Ice_Goddess
                 InitializeSkills.Load();
                 AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
                 Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
-                Drawing.OnDraw += OnDraw;
+                Drawing.OnDraw += InitializeDrawings.OnDraw;
                 Game.OnUpdate += OnUpdate;
             }
             catch (Exception e)
@@ -76,43 +77,6 @@ namespace Lissandra_the_Ice_Goddess
                 }
             }
 
-        }
-
-        #endregion
-
-        #region OnDraw
-
-        private static void OnDraw(EventArgs args)
-        {
-            var drawQ = Menu.Item("drawing.drawQ").GetValue<Circle>();
-            var drawW = Menu.Item("drawing.drawW").GetValue<Circle>();
-            var drawE = Menu.Item("drawing.drawE").GetValue<Circle>();
-            var drawR = Menu.Item("drawing.drawR").GetValue<Circle>();
-
-            var drawDamage = Menu.Item("drawDamage").GetValue<Circle>();
-
-            DamageIndicator.DrawingColor = drawDamage.Color;
-            DamageIndicator.Enabled = drawDamage.Active;
-
-            if (drawQ.Active && !player.IsDead)
-            {
-                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.Q].Range, drawQ.Color);
-            }
-
-            if (drawW.Active && !player.IsDead)
-            {
-                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.W].Range, drawW.Color);
-            }
-
-            if (drawE.Active && !player.IsDead)
-            {
-                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.E].Range, drawE.Color);
-            }
-
-            if (drawR.Active && !player.IsDead)
-            {
-                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.R].Range, drawR.Color);
-            }
         }
 
         #endregion

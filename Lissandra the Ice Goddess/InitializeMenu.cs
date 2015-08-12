@@ -10,7 +10,7 @@ namespace Lissandra_the_Ice_Goddess
         {
             Entry.Menu = new Menu("Lissandra - Ice Goddess", "LissandraIceGoddess", true);
 
-            var owMenu = new Menu("Orbwalker", "orbwalker");
+            var owMenu = new Menu("[IG] Orbwalker", "orbwalker");
             Entry.Orbwalker = new Orbwalking.Orbwalker(owMenu);
             Entry.Menu.AddSubMenu(owMenu);
 
@@ -58,11 +58,12 @@ namespace Lissandra_the_Ice_Goddess
 
             var drawingMenu = Entry.Menu.AddSubMenu(new Menu("[IG] Drawings", "DrawingMenu"));
             {
-                drawingMenu.AddItem(new MenuItem("drawing.drawQ", "Draw Q").SetValue(new Circle(true, Color.Aquamarine)));
-                drawingMenu.AddItem(new MenuItem("drawing.drawW", "Draw W").SetValue(new Circle(true, Color.Aquamarine)));
-                drawingMenu.AddItem(new MenuItem("drawing.drawE", "Draw E").SetValue(new Circle(true, Color.Aquamarine)));
-                drawingMenu.AddItem(new MenuItem("drawing.drawR", "Draw R").SetValue(new Circle(true, Color.Aquamarine)));
-                drawingMenu.AddItem(new MenuItem("drawing.drawDamage", "Draw Damage").SetValue(new Circle(true, Color.GreenYellow)));
+                drawingMenu.AddItem(new MenuItem("drawing.drawQ", "Draw Q").SetValue(new Circle()));
+                drawingMenu.AddItem(new MenuItem("drawing.drawW", "Draw W").SetValue(new Circle()));
+                drawingMenu.AddItem(new MenuItem("drawing.drawE", "Draw E").SetValue(new Circle()));
+                drawingMenu.AddItem(new MenuItem("drawing.drawR", "Draw R").SetValue(new Circle()));
+                drawingMenu.AddItem(new MenuItem("drawing.drawDamage", "Draw Damage").SetValue(new Circle()));
+                drawingMenu.AddItem(new MenuItem("drawing.drawingsOff", "Turn drawings off").SetValue(false));
             }
 
             Entry.Menu.AddItem(new MenuItem("seperator", ""));

@@ -3,9 +3,7 @@ using System.Linq;
 
 using LeagueSharp;
 using LeagueSharp.Common;
-
 using SharpDX;
-
 using Color = System.Drawing.Color;
 
 namespace Lissandra_the_Ice_Goddess
@@ -33,10 +31,10 @@ namespace Lissandra_the_Ice_Goddess
             DrawingColor = Color.Green;
             Enabled = true;
             // Register event handlers
-            Drawing.OnDraw += Drawing_OnDraw;
+            Drawing.OnDraw += OnDraw;
         }
 
-        private static void Drawing_OnDraw(EventArgs args)
+        private static void OnDraw(EventArgs args)
         {
             if (Enabled)
             {
