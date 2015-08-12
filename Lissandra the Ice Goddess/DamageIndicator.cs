@@ -28,7 +28,7 @@ namespace Lissandra_the_Ice_Goddess
         {
             // Apply needed field delegate for damage calculation
             damageToUnit = damageToUnitDelegate;
-            DrawingColor = Color.Green;
+            DrawingColor = Color.GreenYellow;
             Enabled = true;
             // Register event handlers
             Drawing.OnDraw += OnDraw;

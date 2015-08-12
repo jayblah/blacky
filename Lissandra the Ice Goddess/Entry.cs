@@ -36,7 +36,7 @@ namespace Lissandra_the_Ice_Goddess
 
                 DamageIndicator.Initialize(GetComboDamage);
                 DamageIndicator.Enabled = true;
-                DamageIndicator.DrawingColor = Color.Green;
+                DamageIndicator.DrawingColor = Color.GreenYellow;
 
                 InitializeMenu.Load();
                 InitializeSkills.Load();
@@ -57,8 +57,11 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && InitializeSkills.Spells[SpellSlot.W].IsReady() && InitializeSkills.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
+            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && InitializeSkills.Spells[SpellSlot.W].IsReady()
+                && InitializeSkills.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
+            {
                 InitializeSkills.Spells[SpellSlot.W].Cast();
+            }
         }
 
         #endregion
@@ -130,28 +133,28 @@ namespace Lissandra_the_Ice_Goddess
 
         #region GetComboDamage
 
-        public static float GetComboDamage(Obj_AI_Base enemy)
+        public static float GetComboDamage(Obj_AI_Base target)
         {
             var damage = 0d;
 
             if (InitializeSkills.Spells[SpellSlot.Q].IsReady())
             {
-                damage += player.GetSpellDamage(enemy, SpellSlot.Q);
+                damage += player.GetSpellDamage(target, SpellSlot.Q);
             }
 
             if (InitializeSkills.Spells[SpellSlot.W].IsReady())
             {
-                damage += player.GetSpellDamage(enemy, SpellSlot.W);
+                damage += player.GetSpellDamage(target, SpellSlot.W);
             }
 
             if (InitializeSkills.Spells[SpellSlot.E].IsReady())
             {
-                damage += player.GetSpellDamage(enemy, SpellSlot.E);
+                damage += player.GetSpellDamage(target, SpellSlot.E);
             }
 
             if (InitializeSkills.Spells[SpellSlot.R].IsReady())
             {
-                damage += player.GetSpellDamage(enemy, SpellSlot.R);
+                damage += player.GetSpellDamage(target, SpellSlot.R);
             }
 
             return (float)damage;
@@ -161,7 +164,7 @@ namespace Lissandra_the_Ice_Goddess
 
         #region GetIgniteDamage
 
-        private static float GetIgniteDamage(Obj_AI_Hero target)
+        private static float GetIgniteDamage(Obj_AI_Base target)
         {
             if (InitializeSkills.Ignite == SpellSlot.Unknown || player.Spellbook.CanUseSpell(InitializeSkills.Ignite) != SpellState.Ready)
             {
