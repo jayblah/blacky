@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using SharpDX;
+using Color = System.Drawing.Color;
+using Menu = LeagueSharp.Common.Menu;
 
 namespace Lissandra_the_Ice_Goddess
 {
-
-    using Color = System.Drawing.Color;
-    using Menu = LeagueSharp.Common.Menu;
-
     internal class Entry
     {
         #region Static Fields
@@ -31,10 +26,21 @@ namespace Lissandra_the_Ice_Goddess
             {
                 player = ObjectManager.Player;
 
+                if (player.ChampionName != ChampionName)
+                {
+                    return;
+                }
+
                 ShowNotification("Ice Goddess by blacky & Asuna - Loaded", Color.Crimson, 10000);
+
+                DamageIndicator.Initialize(GetComboDamage);
+                DamageIndicator.Enabled = true;
+                DamageIndicator.DrawingColor = Color.Green;
 
                 InitializeMenu.Load();
                 InitializeSkills.Load();
+                AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
+                Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
                 Drawing.OnDraw += OnDraw;
                 Game.OnUpdate += OnUpdate;
             }
@@ -46,15 +52,66 @@ namespace Lissandra_the_Ice_Goddess
 
         #endregion
 
+        #region OnEnemyGapcloser
+
+        private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
+        {
+            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && InitializeSkills.Spells[SpellSlot.W].IsReady() && InitializeSkills.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
+                InitializeSkills.Spells[SpellSlot.W].Cast();
+        }
+
+        #endregion
+
+        #region OnInterruptableTarget
+
+        private static void OnInterruptableTarget(Obj_AI_Hero sender, Interrupter2.InterruptableTargetEventArgs args)
+        {
+            if (Menu.Item("misc.interruptR").GetValue<bool>())
+            {
+                if (args.DangerLevel == Interrupter2.DangerLevel.High
+                    && sender.IsValidTarget(InitializeSkills.Spells[SpellSlot.R].Range)
+                    && InitializeSkills.Spells[SpellSlot.R].IsReady())
+                {
+                    InitializeSkills.Spells[SpellSlot.R].CastOnUnit(sender);
+                }
+            }
+
+        }
+
+        #endregion
+
         #region OnDraw
 
         private static void OnDraw(EventArgs args)
         {
             var drawQ = Menu.Item("drawing.drawQ").GetValue<Circle>();
+            var drawW = Menu.Item("drawing.drawW").GetValue<Circle>();
+            var drawE = Menu.Item("drawing.drawE").GetValue<Circle>();
+            var drawR = Menu.Item("drawing.drawR").GetValue<Circle>();
 
-            if (drawQ.Active)
+            var drawDamage = Menu.Item("drawDamage").GetValue<Circle>();
+
+            DamageIndicator.DrawingColor = drawDamage.Color;
+            DamageIndicator.Enabled = drawDamage.Active;
+
+            if (drawQ.Active && !player.IsDead)
             {
                 Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.Q].Range, drawQ.Color);
+            }
+
+            if (drawW.Active && !player.IsDead)
+            {
+                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.W].Range, drawW.Color);
+            }
+
+            if (drawE.Active && !player.IsDead)
+            {
+                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.E].Range, drawE.Color);
+            }
+
+            if (drawR.Active && !player.IsDead)
+            {
+                Render.Circle.DrawCircle(player.Position, InitializeSkills.Spells[SpellSlot.R].Range, drawR.Color);
             }
         }
 
@@ -64,7 +121,89 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnUpdate(EventArgs args)
         {
+            switch (Orbwalker.ActiveMode)
+            {
+                case Orbwalking.OrbwalkingMode.Combo:
+                    Combo();
+                    break;
+                case Orbwalking.OrbwalkingMode.Mixed:
+                    Harass();
+                    break;
+                case Orbwalking.OrbwalkingMode.LaneClear:
+                    Waveclear();
+                    break;
+            }
+        }
 
+        #endregion
+
+        #region Combo
+
+        private static void Combo()
+        {
+            
+        }
+
+        #endregion
+
+        #region Harass
+
+        private static void Harass()
+        {
+
+        }
+
+        #endregion
+
+        #region Waveclear
+
+        private static void Waveclear()
+        {
+
+        }
+
+        #endregion
+
+        #region GetComboDamage
+
+        public static float GetComboDamage(Obj_AI_Base enemy)
+        {
+            var damage = 0d;
+
+            if (InitializeSkills.Spells[SpellSlot.Q].IsReady())
+            {
+                damage += player.GetSpellDamage(enemy, SpellSlot.Q);
+            }
+
+            if (InitializeSkills.Spells[SpellSlot.W].IsReady())
+            {
+                damage += player.GetSpellDamage(enemy, SpellSlot.W);
+            }
+
+            if (InitializeSkills.Spells[SpellSlot.E].IsReady())
+            {
+                damage += player.GetSpellDamage(enemy, SpellSlot.E);
+            }
+
+            if (InitializeSkills.Spells[SpellSlot.R].IsReady())
+            {
+                damage += player.GetSpellDamage(enemy, SpellSlot.R);
+            }
+
+            return (float)damage;
+        }
+
+        #endregion
+
+        #region GetIgniteDamage
+
+        private static float GetIgniteDamage(Obj_AI_Hero target)
+        {
+            if (InitializeSkills.Ignite == SpellSlot.Unknown || player.Spellbook.CanUseSpell(InitializeSkills.Ignite) != SpellState.Ready)
+            {
+                return 0f;
+            }
+            return (float)player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
         }
 
         #endregion

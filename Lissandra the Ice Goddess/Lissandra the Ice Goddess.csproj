@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DamageIndicator.cs" />
     <Compile Include="Entry.cs" />
     <Compile Include="InitializeMenu.cs" />
     <Compile Include="InitializeSkills.cs" />

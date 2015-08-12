@@ -6,6 +6,8 @@ namespace Lissandra_the_Ice_Goddess
 {
     public class InitializeSkills
     {
+        public static SpellSlot Ignite;
+
         public static readonly Dictionary<SpellSlot, Spell> Spells = new Dictionary<SpellSlot, Spell>
         {
             { SpellSlot.Q, new Spell(SpellSlot.Q, 700) },
@@ -20,6 +22,8 @@ namespace Lissandra_the_Ice_Goddess
             Spells[SpellSlot.W].Delay = 0.25f;
             Spells[SpellSlot.E].SetSkillshot(0.25f, 110, 850, false, SkillshotType.SkillshotLine);
             Spells[SpellSlot.R].SetSkillshot(0.25f, 690, 800, false, SkillshotType.SkillshotCircle);
+
+            Ignite = ObjectManager.Player.GetSpellSlot("summonerdot");
         }
     }
 }
