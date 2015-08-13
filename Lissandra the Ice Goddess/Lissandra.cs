@@ -75,6 +75,8 @@ namespace Lissandra_the_Ice_Goddess
                 Drawing.OnDraw += DrawHandler.OnDraw;
                 Game.OnUpdate += OnUpdate;
                 Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+
+                EStartTick = -1;
             }
             catch (Exception e)
             {
@@ -93,7 +95,7 @@ namespace Lissandra_the_Ice_Goddess
                 {
                     EStart = Vector3.Zero;
                     EEnd = Vector3.Zero;
-                    EStartTick = 0;
+                    EStartTick = -1;
                 }
                 else
                 {
@@ -169,7 +171,8 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void CheckEvade()
         {
-            if (
+            if (EStart != Vector3.Zero && 
+                EEnd != Vector3.Zero &&
                 EvadeHelper.EvadeDetectedSkillshots.Any(
                     skillshot => 
                         skillshot.SpellData.IsDangerous 
