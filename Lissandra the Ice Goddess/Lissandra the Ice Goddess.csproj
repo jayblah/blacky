@@ -69,6 +69,7 @@
     <Compile Include="Evade\SpellData.cs" />
     <Compile Include="Evade\SpellDatabase.cs" />
     <Compile Include="Handlers\DrawHandler.cs" />
+    <Compile Include="Utility\Extensions.cs" />
     <Compile Include="Utility\MenuGenerator.cs" />
     <Compile Include="Handlers\SkillsHandler.cs" />
     <Compile Include="Program.cs" />

@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Lissandra_the_Ice_Goddess.Evade;
 using Color = System.Drawing.Color;
 using Menu = LeagueSharp.Common.Menu;
 using Lissandra_the_Ice_Goddess.Handlers;
 using Lissandra_the_Ice_Goddess.Utility;
+using SharpDX;
 
 namespace Lissandra_the_Ice_Goddess
 {
@@ -18,6 +21,31 @@ namespace Lissandra_the_Ice_Goddess
         private const string ChampionName = "Lissandra";
         private static Obj_AI_Hero player;
 
+        public static Vector3 EStart { get; set; }
+        public static Vector3 EEnd { get; set; }
+
+        public static float EStartTick { get; set; }
+
+        public static float EEndTick
+        {
+            get { return (EStartTick + 1500) / 1000f; }
+        }
+
+        public static Vector3 CurrentEPosition
+        {
+            get
+            {
+                var currentPoint =(float) Math.Floor(
+                        ((Environment.TickCount - EStartTick) / 1000f - SkillsHandler.Spells[SpellSlot.E].Delay) *
+                        SkillsHandler.Spells[SpellSlot.E].Speed);
+                return EStart.Extend(EEnd,  currentPoint < SkillsHandler.Spells[SpellSlot.E].Range ? currentPoint : SkillsHandler.Spells[SpellSlot.E].Range); 
+            }
+        }
+
+        public static float TimeFromCurrentToEnd
+        {
+            get { return (Vector3.Distance(CurrentEPosition, EEnd) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; }
+        }
         #endregion
 
         #region OnLoad
@@ -46,6 +74,7 @@ namespace Lissandra_the_Ice_Goddess
                 Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
                 Drawing.OnDraw += DrawHandler.OnDraw;
                 Game.OnUpdate += OnUpdate;
+                Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             }
             catch (Exception e)
             {
@@ -54,6 +83,27 @@ namespace Lissandra_the_Ice_Goddess
         }
 
         #endregion
+
+        #region Event Delegates
+        static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe && ObjectManager.Player.GetSpellSlot(args.SData.Name) == SpellSlot.E)
+            {
+                if (EEndTick < Utils.TickCount)
+                {
+                    EStart = Vector3.Zero;
+                    EEnd = Vector3.Zero;
+                    EStartTick = 0;
+                }
+                else
+                {
+                    EStart = args.Start;
+                    EEnd = player.ServerPosition.Extend(args.End, SkillsHandler.Spells[SpellSlot.E].Range);
+                    EStartTick = Utils.TickCount;
+                }
+                
+            }
+        }
 
         #region OnEnemyGapcloser
 
@@ -102,8 +152,36 @@ namespace Lissandra_the_Ice_Goddess
                     Waveclear();
                     break;
             }
+
+            OnUpdateMethods();
         }
 
+        #endregion
+
+        #endregion
+
+        #region OnUpdateMethods
+
+        private static void OnUpdateMethods()
+        {
+            CheckEvade();
+        }
+
+        private static void CheckEvade()
+        {
+            if (
+                EvadeHelper.EvadeDetectedSkillshots.Any(
+                    skillshot => 
+                        skillshot.SpellData.IsDangerous 
+                     && skillshot.SpellData.DangerValue >= 3
+                     && skillshot.IsAboutToHit((int)TimeFromCurrentToEnd, EEnd)))
+            {
+                if (CurrentEPosition.IsSafePosition())
+                {
+                    SkillsHandler.Spells[SpellSlot.E].Cast();
+                }
+            }
+        }
         #endregion
 
         #region Combo

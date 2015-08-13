@@ -520,5 +520,28 @@ namespace Lissandra_the_Ice_Goddess.Evade
                                 (Environment.TickCount - StartTick);
             return timeToExplode <= time;
         }
+
+        public bool IsAboutToHit(int time, Vector3 position)
+        {
+            if (SpellData.Type == SkillShotType.SkillshotMissileLine)
+            {
+                Vector2 missilePos = GetMissilePosition(0);
+                Vector2 missilePosAfterT = GetMissilePosition(time);
+                LeagueSharp.Common.Geometry.ProjectionInfo projection = position.To2D().ProjectOn(missilePos, missilePosAfterT);
+
+                return projection.IsOnSegment &&
+                       projection.SegmentPoint.Distance(position) < SpellData.Radius;
+            }
+
+            if (IsSafe(position.To2D()))
+            {
+                return false;
+            }
+
+            var timeToExplode = SpellData.ExtraDuration + SpellData.Delay +
+                                (int)((1000 * Start.Distance(End)) / SpellData.MissileSpeed) -
+                                (Environment.TickCount - StartTick);
+            return timeToExplode <= time;
+        }
     }
 }
