@@ -3,10 +3,12 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using Color = System.Drawing.Color;
 using Menu = LeagueSharp.Common.Menu;
+using Lissandra_the_Ice_Goddess.Handlers;
+using Lissandra_the_Ice_Goddess.Utility;
 
 namespace Lissandra_the_Ice_Goddess
 {
-    internal class Entry
+    internal class Lissandra
     {
         #region Static Fields
 
@@ -38,11 +40,11 @@ namespace Lissandra_the_Ice_Goddess
                 DamageIndicator.Enabled = true;
                 DamageIndicator.DrawingColor = Color.GreenYellow;
 
-                InitializeMenu.Load();
-                InitializeSkills.Load();
+                MenuGenerator.Load();
+                SkillsHandler.Load();
                 AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
                 Interrupter2.OnInterruptableTarget += OnInterruptableTarget;
-                Drawing.OnDraw += InitializeDrawings.OnDraw;
+                Drawing.OnDraw += DrawHandler.OnDraw;
                 Game.OnUpdate += OnUpdate;
             }
             catch (Exception e)
@@ -57,10 +59,10 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && InitializeSkills.Spells[SpellSlot.W].IsReady()
-                && InitializeSkills.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
+            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && SkillsHandler.Spells[SpellSlot.W].IsReady()
+                && SkillsHandler.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
             {
-                InitializeSkills.Spells[SpellSlot.W].Cast();
+                SkillsHandler.Spells[SpellSlot.W].Cast();
             }
         }
 
@@ -73,10 +75,10 @@ namespace Lissandra_the_Ice_Goddess
             if (Menu.Item("misc.interruptR").GetValue<bool>())
             {
                 if (args.DangerLevel == Interrupter2.DangerLevel.High
-                    && sender.IsValidTarget(InitializeSkills.Spells[SpellSlot.R].Range)
-                    && InitializeSkills.Spells[SpellSlot.R].IsReady())
+                    && sender.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range)
+                    && SkillsHandler.Spells[SpellSlot.R].IsReady())
                 {
-                    InitializeSkills.Spells[SpellSlot.R].CastOnUnit(sender);
+                    SkillsHandler.Spells[SpellSlot.R].CastOnUnit(sender);
                 }
             }
 
@@ -137,22 +139,22 @@ namespace Lissandra_the_Ice_Goddess
         {
             var damage = 0d;
 
-            if (InitializeSkills.Spells[SpellSlot.Q].IsReady())
+            if (SkillsHandler.Spells[SpellSlot.Q].IsReady())
             {
                 damage += player.GetSpellDamage(target, SpellSlot.Q);
             }
 
-            if (InitializeSkills.Spells[SpellSlot.W].IsReady())
+            if (SkillsHandler.Spells[SpellSlot.W].IsReady())
             {
                 damage += player.GetSpellDamage(target, SpellSlot.W);
             }
 
-            if (InitializeSkills.Spells[SpellSlot.E].IsReady())
+            if (SkillsHandler.Spells[SpellSlot.E].IsReady())
             {
                 damage += player.GetSpellDamage(target, SpellSlot.E);
             }
 
-            if (InitializeSkills.Spells[SpellSlot.R].IsReady())
+            if (SkillsHandler.Spells[SpellSlot.R].IsReady())
             {
                 damage += player.GetSpellDamage(target, SpellSlot.R);
             }
@@ -166,7 +168,7 @@ namespace Lissandra_the_Ice_Goddess
 
         private static float GetIgniteDamage(Obj_AI_Base target)
         {
-            if (InitializeSkills.Ignite == SpellSlot.Unknown || player.Spellbook.CanUseSpell(InitializeSkills.Ignite) != SpellState.Ready)
+            if (SkillsHandler.Ignite == SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.Ignite) != SpellState.Ready)
             {
                 return 0f;
             }
@@ -183,7 +185,7 @@ namespace Lissandra_the_Ice_Goddess
             Notifications.AddNotification(notif);
             if (dispose)
             {
-                Utility.DelayAction.Add(duration, () => notif.Dispose());
+                LeagueSharp.Common.Utility.DelayAction.Add(duration, () => notif.Dispose());
             }
             return notif;
         }

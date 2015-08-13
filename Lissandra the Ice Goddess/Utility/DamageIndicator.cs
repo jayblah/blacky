@@ -6,13 +6,13 @@ using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace Lissandra_the_Ice_Goddess
+namespace Lissandra_the_Ice_Goddess.Utility
 {
     internal class DamageIndicator
     {
         private const int BarWidth = 104;
         private const int LineThickness = 9;
-        private static Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnit;
+        private static LeagueSharp.Common.Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnit;
         private static readonly Vector2 BarOffset = new Vector2(10, 25);
         private static Color drawingColor;
 
@@ -24,7 +24,7 @@ namespace Lissandra_the_Ice_Goddess
 
         public static bool Enabled { get; set; }
 
-        public static void Initialize(Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnitDelegate)
+        public static void Initialize(LeagueSharp.Common.Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnitDelegate)
         {
             // Apply needed field delegate for damage calculation
             damageToUnit = damageToUnitDelegate;

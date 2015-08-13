@@ -9,7 +9,7 @@ namespace Lissandra_the_Ice_Goddess
         {
             try
             {
-                CustomEvents.Game.OnGameLoad += Entry.OnLoad;
+                CustomEvents.Game.OnGameLoad += Lissandra.OnLoad;
             }
             catch (Exception e)
             {

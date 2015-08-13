@@ -2,9 +2,9 @@
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace Lissandra_the_Ice_Goddess
+namespace Lissandra_the_Ice_Goddess.Handlers
 {
-    public class InitializeSkills
+    public class SkillsHandler
     {
         public static SpellSlot Ignite;
 

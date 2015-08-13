@@ -35,14 +35,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="clipper_library">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\LeagueSharp\System\clipper_library.dll</HintPath>
+    </Reference>
     <Reference Include="LeagueSharp">
-      <HintPath>D:\Wichtige Daten\Programme\LeagueSharp\System\LeagueSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\LeagueSharp\System\LeagueSharp.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp.Common">
-      <HintPath>D:\Wichtige Daten\Programme\LeagueSharp\System\LeagueSharp.Common.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\LeagueSharp\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>D:\Wichtige Daten\Programme\LeagueSharp\System\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\LeagueSharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -54,11 +57,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DamageIndicator.cs" />
-    <Compile Include="Entry.cs" />
-    <Compile Include="InitializeDrawings.cs" />
-    <Compile Include="InitializeMenu.cs" />
-    <Compile Include="InitializeSkills.cs" />
+    <Compile Include="Utility\DamageIndicator.cs" />
+    <Compile Include="Lissandra.cs" />
+    <Compile Include="Utility\EvadeHelper.cs" />
+    <Compile Include="Evade\Collision.cs" />
+    <Compile Include="Evade\EvadeSpellData.cs" />
+    <Compile Include="Evade\EvadeSpellDatabase.cs" />
+    <Compile Include="Evade\Geometry.cs" />
+    <Compile Include="Evade\Skillshot.cs" />
+    <Compile Include="Evade\SkillshotDetector.cs" />
+    <Compile Include="Evade\SpellData.cs" />
+    <Compile Include="Evade\SpellDatabase.cs" />
+    <Compile Include="Handlers\DrawHandler.cs" />
+    <Compile Include="Utility\MenuGenerator.cs" />
+    <Compile Include="Handlers\SkillsHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
