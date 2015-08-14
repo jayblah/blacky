@@ -16,10 +16,16 @@ namespace Lissandra_the_Ice_Goddess
         #region Static Fields
 
         public static Menu Menu;
+        public static ManaManager ManaManager;
         public static Orbwalking.Orbwalker Orbwalker;
 
         private const string ChampionName = "Lissandra";
         private static Obj_AI_Hero player;
+
+        private static HitChance CustomHitChance
+        {
+            get { return GetHitchance(); }
+        }
 
         public static Vector3 EStart { get; set; }
         public static Vector3 EEnd { get; set; }
@@ -68,6 +74,7 @@ namespace Lissandra_the_Ice_Goddess
                 DamageIndicator.Enabled = true;
                 DamageIndicator.DrawingColor = Color.GreenYellow;
 
+                ManaManager = new ManaManager();
                 MenuGenerator.Load();
                 SkillsHandler.Load();
                 AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
@@ -145,14 +152,19 @@ namespace Lissandra_the_Ice_Goddess
             switch (Orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
-                    Combo();
+                    OnCombo();
                     break;
                 case Orbwalking.OrbwalkingMode.Mixed:
-                    Harass();
+                    OnHarass();
                     break;
                 case Orbwalking.OrbwalkingMode.LaneClear:
                     Waveclear();
                     break;
+            }
+
+            if (Menu.Item("flee.activated").GetValue<KeyBind>().Active)
+            {
+                OnFlee();
             }
 
             OnUpdateMethods();
@@ -189,7 +201,7 @@ namespace Lissandra_the_Ice_Goddess
 
         #region Combo
 
-        private static void Combo()
+        private static void OnCombo()
         {
             
         }
@@ -198,9 +210,46 @@ namespace Lissandra_the_Ice_Goddess
 
         #region Harass
 
-        private static void Harass()
+        private static void OnHarass()
         {
+            var qtarget = TargetSelector.GetTarget(SkillsHandler.Spells[SpellSlot.Q].Range, TargetSelector.DamageType.Magical);
+            var etarget = TargetSelector.GetTarget(SkillsHandler.Spells[SpellSlot.E].Range, TargetSelector.DamageType.Magical);
+            if (qtarget == null || !qtarget.IsValid || !ManaManager.CanHarass())
+            {
+                return;
+            }
 
+            var qHarass = Menu.Item("harass.useQ").GetValue<bool>();
+            var wHarass = Menu.Item("harass.useW").GetValue<bool>();
+            var eHarass = Menu.Item("harass.useE").GetValue<bool>();
+
+            if (qHarass && SkillsHandler.Spells[SpellSlot.Q].IsReady() && SkillsHandler.Spells[SpellSlot.Q].IsInRange(qtarget))
+            {
+                SkillsHandler.Spells[SpellSlot.Q].CastIfHitchanceEquals(qtarget, CustomHitChance);
+            }
+
+            if (wHarass && SkillsHandler.Spells[SpellSlot.W].IsReady())
+            {
+                if (SkillsHandler.Spells[SpellSlot.W].GetPrediction(qtarget).Hitchance > HitChance.High && player.Distance(qtarget.Position) <= SkillsHandler.Spells[SpellSlot.W].Width)
+                {
+                    SkillsHandler.Spells[SpellSlot.W].Cast();
+                }
+            }
+
+            if (eHarass && SkillsHandler.Spells[SpellSlot.E].IsReady() && SkillsHandler.Spells[SpellSlot.E].IsInRange(etarget))
+            {
+                SkillsHandler.Spells[SpellSlot.E].CastIfHitchanceEquals(etarget, CustomHitChance);
+            }
+        }
+
+        #endregion
+
+        #region Flee
+
+        private static void OnFlee()
+        {
+            // TODO
+            Orbwalking.Orbwalk(null, Game.CursorPos);
         }
 
         #endregion
@@ -254,6 +303,27 @@ namespace Lissandra_the_Ice_Goddess
                 return 0f;
             }
             return (float)player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+        }
+
+        #endregion
+
+        #region GetHitChance
+
+        private static HitChance GetHitchance()
+        {
+            switch (Menu.Item("misc.hitChance").GetValue<StringList>().SelectedIndex)
+            {
+                case 0:
+                    return HitChance.Low;
+                case 1:
+                    return HitChance.Medium;
+                case 2:
+                    return HitChance.High;
+                case 3:
+                    return HitChance.VeryHigh;
+                default:
+                    return HitChance.Medium;
+            }
         }
 
         #endregion

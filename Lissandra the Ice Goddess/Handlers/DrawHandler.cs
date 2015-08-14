@@ -26,20 +26,36 @@ namespace Lissandra_the_Ice_Goddess.Handlers
             DamageIndicator.Enabled = drawDamage.Active;
 
             if (drawQ.Active)
+            {
                 if (SkillsHandler.Spells[SpellSlot.Q].Level > 0)
+                {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.Q].Range, Color.Aqua);
+                }
+            }
 
             if (drawW.Active)
+            {
                 if (SkillsHandler.Spells[SpellSlot.W].Level > 0)
+                {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.W].Range, Color.Aqua);
+                }
+            }
 
             if (drawE.Active)
+            {
                 if (SkillsHandler.Spells[SpellSlot.E].Level > 0)
+                {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.E].Range, Color.Aqua);
+                }
+            }
 
             if (drawR.Active)
+            {
                 if (SkillsHandler.Spells[SpellSlot.R].Level > 0)
+                {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.R].Range, Color.Aqua);
+                }
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using LeagueSharp.Common;
-using Color = System.Drawing.Color;
 
 namespace Lissandra_the_Ice_Goddess.Utility
 {
@@ -35,6 +34,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
             var harassMenu = Lissandra.Menu.AddSubMenu(new Menu("[IG] Harass", "HarassMenu"));
             {
                 harassMenu.AddItem(new MenuItem("harass.useQ", "Use Q").SetValue(true));
+                harassMenu.AddItem(new MenuItem("harass.useW", "Use W").SetValue(false));
                 harassMenu.AddItem(new MenuItem("harass.useE", "Use E").SetValue(true));
             }
 
@@ -54,7 +54,10 @@ namespace Lissandra_the_Ice_Goddess.Utility
             {
                 miscMenu.AddItem(new MenuItem("misc.gapcloseW", "Use W against gapclosers").SetValue(true));
                 miscMenu.AddItem(new MenuItem("misc.interruptR", "Use R to interrupt dangerous spells").SetValue(true));
+                miscMenu.AddItem(new MenuItem("misc.hitChance", "Prediction Hitchance").SetValue(new StringList(new[] { "Low", "Medium", "High", "Very High" }, 3)));
             }
+
+            Lissandra.ManaManager.AddToMenu(ref Lissandra.Menu);
 
             var drawingMenu = Lissandra.Menu.AddSubMenu(new Menu("[IG] Drawings", "DrawingMenu"));
             {

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
@@ -11,25 +8,25 @@ namespace Lissandra_the_Ice_Goddess.Utility
 {
     static class Extensions
     {
-        public static bool IsSafePosition(this Vector3 Position, bool considerAllyTurrets = true, bool considerLHEnemies = true)
+        public static bool IsSafePosition(this Vector3 position, bool considerAllyTurrets = true, bool considerLhEnemies = true)
         {
-            if (Position.UnderTurret(true) && !ObjectManager.Player.UnderTurret(true))
+            if (position.UnderTurret(true) && !ObjectManager.Player.UnderTurret(true))
             {
                 return false;
             }
 
-            var allies = Position.CountAlliesInRange(ObjectManager.Player.AttackRange);
-            var enemies = Position.CountEnemiesInRange(ObjectManager.Player.AttackRange);
-            var lhEnemies = considerLHEnemies ? Position.GetLhEnemiesNear(ObjectManager.Player.AttackRange, 15).Count() : 0;
+            var allies = position.CountAlliesInRange(ObjectManager.Player.AttackRange);
+            var enemies = position.CountEnemiesInRange(ObjectManager.Player.AttackRange);
+            var lhEnemies = considerLhEnemies ? position.GetLhEnemiesNear(ObjectManager.Player.AttackRange, 15).Count() : 0;
 
             if (enemies <= 1) ////It's a 1v1, safe to assume I can Q
             {
                 return true;
             }
 
-            if (Position.UnderAllyTurret())
+            if (position.UnderAllyTurret())
             {
-                var nearestAllyTurret = ObjectManager.Get<Obj_AI_Turret>().Where(h => h.IsAlly).OrderBy(d => d.Distance(Position, true)).FirstOrDefault();
+                var nearestAllyTurret = ObjectManager.Get<Obj_AI_Turret>().Where(h => h.IsAlly).OrderBy(d => d.Distance(position, true)).FirstOrDefault();
 
                 if (nearestAllyTurret != null)
                 {
@@ -46,7 +43,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
             return HeroManager.Enemies.Where(hero => hero.IsValidTarget(range, true, position) && hero.HealthPercent <= Healthpercent).ToList();
         }
 
-        public static bool UnderAllyTurret(this Vector3 Position)
+        public static bool UnderAllyTurret(this Vector3 position)
         {
             return ObjectManager.Get<Obj_AI_Turret>().Any(t => t.IsAlly && !t.IsDead);
         }
