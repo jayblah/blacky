@@ -27,6 +27,22 @@ namespace Lissandra_the_Ice_Goddess
             get { return GetHitchance(); }
         }
 
+        #region E Related
+
+        private static bool eActive = false;
+
+        public static bool EActive
+        {
+            get { return eActive && EDuration > 0; }
+        }
+
+        public static int ECastTime = 0;
+
+        public static float EDuration
+        {
+            get { return (ECastTime + 1500 - Environment.TickCount) / 1000f; }
+        }
+
         public static Vector3 EStart { get; set; }
         public static Vector3 EEnd { get; set; }
 
@@ -52,6 +68,9 @@ namespace Lissandra_the_Ice_Goddess
         {
             get { return (Vector3.Distance(CurrentEPosition, EEnd) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; }
         }
+
+        #endregion
+
         #endregion
 
         #region OnLoad
@@ -110,7 +129,16 @@ namespace Lissandra_the_Ice_Goddess
                     EEnd = player.ServerPosition.Extend(args.End, SkillsHandler.Spells[SpellSlot.E].Range);
                     EStartTick = Utils.TickCount;
                 }
-                
+
+                if (EDuration > -1)
+                {
+                    eActive = false;
+                }
+                else
+                {
+                    ECastTime = Environment.TickCount;
+                    eActive = true;
+                }
             }
         }
 
@@ -228,15 +256,12 @@ namespace Lissandra_the_Ice_Goddess
                 SkillsHandler.Spells[SpellSlot.Q].CastIfHitchanceEquals(qtarget, CustomHitChance);
             }
 
-            if (wHarass && SkillsHandler.Spells[SpellSlot.W].IsReady())
+            if (wHarass && SkillsHandler.Spells[SpellSlot.W].IsReady() && SkillsHandler.Spells[SpellSlot.W].IsInRange(qtarget))
             {
-                if (SkillsHandler.Spells[SpellSlot.W].GetPrediction(qtarget).Hitchance > HitChance.High && player.Distance(qtarget.Position) <= SkillsHandler.Spells[SpellSlot.W].Width)
-                {
                     SkillsHandler.Spells[SpellSlot.W].Cast();
-                }
             }
 
-            if (eHarass && SkillsHandler.Spells[SpellSlot.E].IsReady() && SkillsHandler.Spells[SpellSlot.E].IsInRange(etarget))
+            if (eHarass && !EActive && SkillsHandler.Spells[SpellSlot.E].IsReady() && SkillsHandler.Spells[SpellSlot.E].IsInRange(etarget))
             {
                 SkillsHandler.Spells[SpellSlot.E].CastIfHitchanceEquals(etarget, CustomHitChance);
             }
