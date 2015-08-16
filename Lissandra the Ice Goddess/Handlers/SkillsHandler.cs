@@ -33,7 +33,7 @@ namespace Lissandra_the_Ice_Goddess.Handlers
             QShard.SetSkillshot(0.25f, 90, 2250, false, SkillshotType.SkillshotLine);
         }
 
-        public static Vector3 GetQPrediction(Obj_AI_Hero unit)
+        public static Vector3? GetQPrediction(Obj_AI_Hero unit)
         {
             var normalPrediction = Spells[SpellSlot.Q].GetPrediction(unit);
             if (normalPrediction.Hitchance == HitChance.Collision || normalPrediction.Hitchance == HitChance.OutOfRange)
@@ -57,8 +57,12 @@ namespace Lissandra_the_Ice_Goddess.Handlers
                     }
                 }
             }
-            //The Hitchance is not Collision or Out of Range, Normal prediction.
-            return normalPrediction.CastPosition;
+            if (normalPrediction.Hitchance >= HitChance.High && unit.IsValidTarget(Spells[SpellSlot.Q].Range))
+            {
+                //The Hitchance is not Collision or Out of Range, Normal prediction.
+                return normalPrediction.CastPosition;
+            }
+            return null;
         }
     }
 }
