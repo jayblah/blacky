@@ -186,7 +186,7 @@ namespace Lissandra_the_Ice_Goddess
                     OnHarass();
                     break;
                 case Orbwalking.OrbwalkingMode.LaneClear:
-                    Waveclear();
+                    OnWaveclear();
                     break;
             }
 
@@ -304,9 +304,9 @@ namespace Lissandra_the_Ice_Goddess
             }
         }
 
-        private static float TimeToEEnd(Vector3 from, Vector3 To)
+        private static float TimeToEEnd(Vector3 from, Vector3 to)
         {
-            return (Vector3.Distance(from, To) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; 
+            return (Vector3.Distance(from, to) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; 
         }
 
         
@@ -316,30 +316,43 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnHarass()
         {
-            var qtarget = TargetSelector.GetTarget(SkillsHandler.Spells[SpellSlot.Q].Range, TargetSelector.DamageType.Magical);
-            var etarget = TargetSelector.GetTarget(SkillsHandler.Spells[SpellSlot.E].Range, TargetSelector.DamageType.Magical);
-            if (qtarget == null || !qtarget.IsValid || !ManaManager.CanHarass())
+            var harassTarget = TargetSelector.GetTarget(SkillsHandler.QShard.Range, TargetSelector.DamageType.Magical);
+
+            if (!ManaManager.CanHarass())
             {
                 return;
             }
 
-            var qHarass = Menu.Item("harass.useQ").GetValue<bool>();
-            var wHarass = Menu.Item("harass.useW").GetValue<bool>();
-            var eHarass = Menu.Item("harass.useE").GetValue<bool>();
-
-            if (qHarass && SkillsHandler.Spells[SpellSlot.Q].IsReady() && SkillsHandler.Spells[SpellSlot.Q].IsInRange(qtarget))
+            if (harassTarget.IsValidTarget())
             {
-                SkillsHandler.Spells[SpellSlot.Q].CastIfHitchanceEquals(qtarget, CustomHitChance);
-            }
+                if (GetMenuValue<bool>("lissandra.harass.useQ")
+                    && harassTarget.IsValidTarget(SkillsHandler.QShard.Range)
+                    && SkillsHandler.Spells[SpellSlot.Q].IsReady())
+                {
+                    var predictionPosition = SkillsHandler.GetQPrediction(harassTarget);
+                    if (predictionPosition != null)
+                    {
+                        //Found a valid Q prediction
+                        SkillsHandler.Spells[SpellSlot.Q].Cast((Vector3)predictionPosition);
+                    }
+                }
 
-            if (wHarass && SkillsHandler.Spells[SpellSlot.W].IsReady() && SkillsHandler.Spells[SpellSlot.W].IsInRange(qtarget))
-            {
+                if (GetMenuValue<bool>("lissandra.harass.useW")
+                    && harassTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range)
+                    && SkillsHandler.Spells[SpellSlot.W].IsReady())
+                {
                     SkillsHandler.Spells[SpellSlot.W].Cast();
-            }
+                }
 
-            if (eHarass && !EActive && SkillsHandler.Spells[SpellSlot.E].IsReady() && SkillsHandler.Spells[SpellSlot.E].IsInRange(etarget))
-            {
-                SkillsHandler.Spells[SpellSlot.E].CastIfHitchanceEquals(etarget, CustomHitChance);
+                if (GetMenuValue<bool>("lissandra.harass.useE")
+                    && harassTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.E].Range)
+                    && SkillsHandler.Spells[SpellSlot.E].IsReady())
+                {
+                    if (!EActive)
+                    {
+                        SkillsHandler.Spells[SpellSlot.E].CastIfHitchanceEquals(harassTarget, CustomHitChance);
+                    }
+                }
             }
         }
 
@@ -357,9 +370,9 @@ namespace Lissandra_the_Ice_Goddess
 
         #region Waveclear
 
-        private static void Waveclear()
+        private static void OnWaveclear()
         {
-
+            //TODO WaveClear
         }
 
         #endregion
