@@ -248,9 +248,46 @@ namespace Lissandra_the_Ice_Goddess
                         SkillsHandler.Spells[SpellSlot.Q].Cast((Vector3) predictionPosition);
                     }
                 }
+
+                if (GetMenuValue<bool>("lissandra.combo.useW")
+                    && comboTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range)
+                    && SkillsHandler.Spells[SpellSlot.W].IsReady())
+                {
+                    SkillsHandler.Spells[SpellSlot.W].Cast();
+                }
+
+                if (GetMenuValue<bool>("lissandra.combo.useE")
+                    && comboTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.E].Range)
+                    && SkillsHandler.Spells[SpellSlot.E].IsReady())
+                {
+                    if (!EActive)
+                    {
+                        var comboTargetPosition = Prediction.GetPrediction(comboTarget,
+                            TimeToEEnd(ObjectManager.Player.ServerPosition, comboTarget.ServerPosition)).UnitPosition;
+                        //TODO This will probably fail horribly because it's such a long delay ayy lmao
+                        if (comboTargetPosition.IsSafePositionEx() && comboTargetPosition.PassesNoEIntoEnemiesCheck())
+                        {
+                            SkillsHandler.Spells[SpellSlot.E].Cast(comboTargetPosition);
+                        }
+                    }
+                    else
+                    {
+                        if (CurrentEPosition.Distance(comboTarget.ServerPosition) <= 450f || CurrentEPosition.Distance(EEnd) <= 100f)
+                        {
+                            if (CurrentEPosition.IsSafePositionEx() && CurrentEPosition.PassesNoEIntoEnemiesCheck())
+                            {
+                                SkillsHandler.Spells[SpellSlot.E].Cast();
+                            }
+                        }
+                    }
+                }
             }
         }
 
+        private static float TimeToEEnd(Vector3 from, Vector3 To)
+        {
+            return (Vector3.Distance(from, To) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; 
+        }
         #endregion
 
         #region Harass
