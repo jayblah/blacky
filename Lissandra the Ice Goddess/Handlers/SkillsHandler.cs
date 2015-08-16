@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace Lissandra_the_Ice_Goddess.Handlers
 {
@@ -29,6 +31,34 @@ namespace Lissandra_the_Ice_Goddess.Handlers
             //Q Shard
             QShard = new Spell(SpellSlot.Q, 850);
             QShard.SetSkillshot(0.25f, 90, 2250, false, SkillshotType.SkillshotLine);
+        }
+
+        public static Vector3 GetQPrediction(Obj_AI_Hero unit)
+        {
+            var normalPrediction = Spells[SpellSlot.Q].GetPrediction(unit);
+            if (normalPrediction.Hitchance == HitChance.Collision || normalPrediction.Hitchance == HitChance.OutOfRange)
+            {
+                //There's collision or is out of range. We use Q shard prediction
+                //Get Shard prediction
+                var shardPrediction = QShard.GetPrediction(unit);
+                if (shardPrediction.Hitchance >= HitChance.High) //TODO Might need to change to >= High in case it doesn't cast too often
+                {
+                    //Make a list of positions including the Cast Position for the Shard Prediction
+                    var positionsList = new List<Vector2>();
+                    {
+                        positionsList.Add(shardPrediction.CastPosition.To2D());
+                    }
+                    //Check the collision Objects between my position and the cast position
+                    var collisionObjects = QShard.GetCollision(ObjectManager.Player.ServerPosition.To2D(), positionsList);
+                    //If there's a minion/Any collisionable object in between
+                    if (collisionObjects.Any())
+                    {
+                        return shardPrediction.CastPosition;
+                    }
+                }
+            }
+            //The Hitchance is not Collision or Out of Range, Normal prediction.
+            return normalPrediction.CastPosition;
         }
     }
 }
