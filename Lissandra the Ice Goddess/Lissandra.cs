@@ -231,7 +231,24 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnCombo()
         {
-            
+            //TODO The All In Combo.
+            var comboTarget = TargetSelector.GetTarget(SkillsHandler.QShard.Range,
+                TargetSelector.DamageType.Magical);
+
+            if (comboTarget.IsValidTarget())
+            {
+                if (GetMenuValue<bool>("lissandra.combo.useQ") 
+                    && comboTarget.IsValidTarget(SkillsHandler.QShard.Range) 
+                    && SkillsHandler.Spells[SpellSlot.Q].IsReady())
+                {
+                    var predictionPosition = SkillsHandler.GetQPrediction(comboTarget);
+                    if (predictionPosition != null)
+                    {
+                        //Found a valid Q prediction
+                        SkillsHandler.Spells[SpellSlot.Q].Cast((Vector3) predictionPosition);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -367,5 +384,14 @@ namespace Lissandra_the_Ice_Goddess
         }
 
         #endregion
+
+        #region Utility Methods
+
+        public static T GetMenuValue<T>(String menuItem)
+        {
+            return Menu.Item(menuItem).GetValue<T>();
+        }
+        #endregion
+
     }
 }
