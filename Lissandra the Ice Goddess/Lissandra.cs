@@ -224,6 +224,26 @@ namespace Lissandra_the_Ice_Goddess
                     SkillsHandler.Spells[SpellSlot.E].Cast();
                 }
             }
+            var rSkills = EvadeHelper.EvadeDetectedSkillshots.Where(
+                skillshot =>
+                    skillshot.SpellData.IsDangerous
+                    && skillshot.SpellData.DangerValue >= 3
+                    && skillshot.IsAboutToHit(300, ObjectManager.Player.ServerPosition)).ToList();
+
+            if (GetMenuValue<bool>("lissandra.misc.saveR") && SkillsHandler.Spells[SpellSlot.R].IsReady() && rSkills.Any())
+            {
+                //Let's try this, never done it ayy lmao
+                if (
+                    rSkills.Any(
+                        skillshot =>
+                            skillshot.Caster.GetSpellDamage(ObjectManager.Player, skillshot.SpellData.SpellName) >=
+                            ObjectManager.Player.Health + 15))
+                {
+                    //Found at least 1 spell that is gonna kill me.
+                    SkillsHandler.Spells[SpellSlot.R].Cast();
+                }
+            }
+
         }
         #endregion
 
@@ -288,6 +308,8 @@ namespace Lissandra_the_Ice_Goddess
         {
             return (Vector3.Distance(from, To) / SkillsHandler.Spells[SpellSlot.E].Speed) * 1000f; 
         }
+
+        
         #endregion
 
         #region Harass
