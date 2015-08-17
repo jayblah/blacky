@@ -427,7 +427,7 @@ namespace Lissandra_the_Ice_Goddess
 
         private static float GetIgniteDamage(Obj_AI_Base target)
         {
-            if (SkillsHandler.Ignite == SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.Ignite) != SpellState.Ready)
+            if (!CanCastIgnite())
             {
                 return 0f;
             }
@@ -477,6 +477,40 @@ namespace Lissandra_the_Ice_Goddess
         public static T GetMenuValue<T>(String menuItem)
         {
             return Menu.Item(menuItem).GetValue<T>();
+        }
+
+        private static bool CanCastIgnite()
+        {
+            return SkillsHandler.IgniteSlot != SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.IgniteSlot) != SpellState.Ready;
+        }
+
+        private static bool ShouldUseIgnite(Obj_AI_Hero target)
+        {
+            if (!CanCastIgnite())
+            {
+                return false; //Duh
+            }
+            var damage = 0f;
+
+            damage += (float)ObjectManager.Player.GetAutoAttackDamage(target, true);
+            damage += (SkillsHandler.GetQPrediction(target) != null && SkillsHandler.Spells[SpellSlot.Q].IsReady() && GetMenuValue<bool>("lissandra.combo.useQ"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q)
+                : 0f;
+            damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range) && SkillsHandler.Spells[SpellSlot.W].IsReady() && GetMenuValue<bool>("lissandra.combo.useW"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.W)
+                : 0f;
+            damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range) && SkillsHandler.Spells[SpellSlot.R].IsReady() && GetMenuValue<bool>("lissandra.combo.useR"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.R)
+                : 0f;
+            var damageWithIgnite = damage +
+                                   ObjectManager.Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+
+            if (damage < target.Health + 15 && damageWithIgnite > target.Health + 15)
+            {
+                return true;
+            }
+
+            return false;
         }
         #endregion
 

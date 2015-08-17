@@ -8,7 +8,14 @@ namespace Lissandra_the_Ice_Goddess.Handlers
 {
     public class SkillsHandler
     {
-        public static SpellSlot Ignite;
+        public static SpellSlot IgniteSlot
+        {
+            get
+            {
+                return ObjectManager.Player.GetSpellSlot("summonerdot");
+            }
+        }
+
         public static Spell QShard { get; set; }
 
         public static readonly Dictionary<SpellSlot, Spell> Spells = new Dictionary<SpellSlot, Spell>
@@ -26,7 +33,6 @@ namespace Lissandra_the_Ice_Goddess.Handlers
             Spells[SpellSlot.E].SetSkillshot(0.25f, 110, 850, false, SkillshotType.SkillshotLine);
             Spells[SpellSlot.R].SetSkillshot(0.25f, 690, 800, false, SkillshotType.SkillshotCircle);
 
-            Ignite = ObjectManager.Player.GetSpellSlot("summonerdot");
 
             //Q Shard
             QShard = new Spell(SpellSlot.Q, 850);
