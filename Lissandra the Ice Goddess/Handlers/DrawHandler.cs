@@ -10,12 +10,12 @@ namespace Lissandra_the_Ice_Goddess.Handlers
     {
         public static void OnDraw(EventArgs args)
         {
-            var drawOff = Lissandra.Menu.Item("drawing.drawingsOff").GetValue<bool>();
-            var drawQ = Lissandra.Menu.Item("drawing.drawQ").GetValue<Circle>();
-            var drawW = Lissandra.Menu.Item("drawing.drawW").GetValue<Circle>();
-            var drawE = Lissandra.Menu.Item("drawing.drawE").GetValue<Circle>();
-            var drawR = Lissandra.Menu.Item("drawing.drawR").GetValue<Circle>();
-            var drawDamage = Lissandra.Menu.Item("drawing.drawDamage").GetValue<Circle>();
+            var drawOff = Lissandra.Menu.Item("lissandra.drawing.drawingsOff").GetValue<bool>();
+            var drawQ = Lissandra.Menu.Item("lissandra.drawing.drawQ").GetValue<Circle>();
+            var drawW = Lissandra.Menu.Item("lissandra.drawing.drawW").GetValue<Circle>();
+            var drawE = Lissandra.Menu.Item("lissandra.drawing.drawE").GetValue<Circle>();
+            var drawR = Lissandra.Menu.Item("lissandra.drawing.drawR").GetValue<Circle>();
+            var drawDamage = Lissandra.Menu.Item("lissandra.drawing.drawDamage").GetValue<Circle>();
 
             if (drawOff || ObjectManager.Player.IsDead)
             {

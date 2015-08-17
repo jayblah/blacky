@@ -389,6 +389,9 @@ namespace Lissandra_the_Ice_Goddess
         {
             var minionsInRange = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
                 SkillsHandler.QShard.Range, MinionTypes.All, MinionTeam.NotAlly);
+            var minionsInRangeW = MinionManager.GetMinions(
+                ObjectManager.Player.ServerPosition,
+                SkillsHandler.Spells[SpellSlot.W].Width, MinionTypes.All, MinionTeam.NotAlly);
             //This ain't java fuck you nazi resharper
             if (minionsInRange.Any())
             {
@@ -410,7 +413,13 @@ namespace Lissandra_the_Ice_Goddess
                     }
                 }
 
-                //TODO W
+                if (GetMenuValue<bool>("lissandra.waveclear.useW") && SkillsHandler.Spells[SpellSlot.W].IsReady())
+                {
+                    if (minionsInRangeW.Count >= 2)
+                    {
+                        SkillsHandler.Spells[SpellSlot.W].Cast();
+                    }
+                }
             }
         }
 
@@ -438,12 +447,11 @@ namespace Lissandra_the_Ice_Goddess
 
         #endregion
 
-
         #region GetHitChance
 
         private static HitChance GetHitchance()
         {
-            switch (Menu.Item("misc.hitChance").GetValue<StringList>().SelectedIndex)
+            switch (Menu.Item("lissandra.misc.hitChance").GetValue<StringList>().SelectedIndex)
             {
                 case 0:
                     return HitChance.Low;
