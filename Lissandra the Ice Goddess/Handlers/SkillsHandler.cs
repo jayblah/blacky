@@ -70,5 +70,15 @@ namespace Lissandra_the_Ice_Goddess.Handlers
             }
             return null;
         }
+
+        public static int GetQCollisionObjects(Obj_AI_Base fromUnit)
+        {
+           var positionsList = new List<Vector2>();
+           {
+                 positionsList.Add(fromUnit.ServerPosition.To2D());
+           }
+           var collisionObjects = QShard.GetCollision(ObjectManager.Player.ServerPosition.To2D(), positionsList);
+           return collisionObjects.Count();
+        }
     }
 }

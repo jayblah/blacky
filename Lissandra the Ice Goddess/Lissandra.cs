@@ -387,54 +387,57 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnWaveclear()
         {
-            //TODO WaveClear
+            var minionsInRange = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
+                SkillsHandler.QShard.Range, MinionTypes.All, MinionTeam.NotAlly);
+            //This ain't java fuck you nazi resharper
+            if (minionsInRange.Any())
+            {
+                if (GetMenuValue<bool>("lissandra.waveclear.useQ") && SkillsHandler.Spells[SpellSlot.Q].IsReady())
+                {
+                    //Gets the minion that has max collision at its position, so we hit as many minions with Q as possible.
+                    Obj_AI_Base maxCollisionMinion = null;
+                    var maxCollisionNumber = 0;
+                    foreach (var minion in minionsInRange.Where(minion => SkillsHandler.GetQCollisionObjects(minion) > maxCollisionNumber))
+                    {
+                        maxCollisionNumber = SkillsHandler.GetQCollisionObjects(minion);
+                        maxCollisionMinion = minion;
+                    }
+
+                    if (maxCollisionMinion.IsValidTarget() && maxCollisionNumber + 1 >= 3) //We hit at least 3 minions (Including the starting one).
+                    {
+                        SkillsHandler.Spells[SpellSlot.Q].Cast(maxCollisionMinion);
+
+                    }
+                }
+
+                //TODO W
+            }
         }
 
         #endregion
 
         #region GetComboDamage
 
-        public static float GetComboDamage(Obj_AI_Base target)
+        public static float GetComboDamage(Obj_AI_Hero target)
         {
-            var damage = 0d;
+            var damage = 0f;
 
-            if (SkillsHandler.Spells[SpellSlot.Q].IsReady())
-            {
-                damage += player.GetSpellDamage(target, SpellSlot.Q);
-            }
+            damage += (float)ObjectManager.Player.GetAutoAttackDamage(target, true) * 2;
+            damage += (SkillsHandler.GetQPrediction(target) != null && SkillsHandler.Spells[SpellSlot.Q].IsReady() && GetMenuValue<bool>("lissandra.combo.useQ"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q)
+                : 0f;
+            damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range) && SkillsHandler.Spells[SpellSlot.W].IsReady() && GetMenuValue<bool>("lissandra.combo.useW"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.W)
+                : 0f;
+            damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range) && SkillsHandler.Spells[SpellSlot.R].IsReady() && GetMenuValue<bool>("lissandra.combo.useR"))
+                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.R)
+                : 0f;
 
-            if (SkillsHandler.Spells[SpellSlot.W].IsReady())
-            {
-                damage += player.GetSpellDamage(target, SpellSlot.W);
-            }
-
-            if (SkillsHandler.Spells[SpellSlot.E].IsReady())
-            {
-                damage += player.GetSpellDamage(target, SpellSlot.E);
-            }
-
-            if (SkillsHandler.Spells[SpellSlot.R].IsReady())
-            {
-                damage += player.GetSpellDamage(target, SpellSlot.R);
-            }
-
-            return (float)damage;
+            return damage;
         }
 
         #endregion
 
-        #region GetIgniteDamage
-
-        private static float GetIgniteDamage(Obj_AI_Base target)
-        {
-            if (!CanCastIgnite())
-            {
-                return 0f;
-            }
-            return (float)player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-        }
-
-        #endregion
 
         #region GetHitChance
 
@@ -481,7 +484,7 @@ namespace Lissandra_the_Ice_Goddess
 
         private static bool CanCastIgnite()
         {
-            return SkillsHandler.IgniteSlot != SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.IgniteSlot) != SpellState.Ready;
+            return GetMenuValue<bool>("combo.options.useIgnite") && SkillsHandler.IgniteSlot != SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.IgniteSlot) != SpellState.Ready;
         }
 
         private static bool ShouldUseIgnite(Obj_AI_Hero target)
@@ -492,7 +495,7 @@ namespace Lissandra_the_Ice_Goddess
             }
             var damage = 0f;
 
-            damage += (float)ObjectManager.Player.GetAutoAttackDamage(target, true);
+            damage += (float)ObjectManager.Player.GetAutoAttackDamage(target, true) * 2;
             damage += (SkillsHandler.GetQPrediction(target) != null && SkillsHandler.Spells[SpellSlot.Q].IsReady() && GetMenuValue<bool>("lissandra.combo.useQ"))
                 ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q)
                 : 0f;
@@ -512,6 +515,17 @@ namespace Lissandra_the_Ice_Goddess
 
             return false;
         }
+
+        private static float GetIgniteDamage(Obj_AI_Base target)
+        {
+            if (!CanCastIgnite())
+            {
+                return 0f;
+            }
+            return (float)player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+        }
+
+
         #endregion
 
     }
