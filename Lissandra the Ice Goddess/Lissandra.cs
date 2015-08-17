@@ -312,7 +312,7 @@ namespace Lissandra_the_Ice_Goddess
                     }
                 }
 
-                if (ShouldUseIgnite() && player.Distance(comboTarget) <= 600)
+                if (ShouldUseIgnite(comboTarget) && player.Distance(comboTarget) <= 600)
                 {
                     player.Spellbook.CastSpell(SkillsHandler.IgniteSlot, comboTarget);
                 }
