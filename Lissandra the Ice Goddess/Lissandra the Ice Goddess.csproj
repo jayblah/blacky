@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utility\Damage\DamagePrediction.cs" />
     <Compile Include="Utility\LissandraGeometry.cs" />
     <Compile Include="Utility\ManaManager.cs" />
     <Compile Include="Utility\DamageIndicator.cs" />

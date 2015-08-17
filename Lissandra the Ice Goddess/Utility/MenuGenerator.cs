@@ -41,8 +41,8 @@ namespace Lissandra_the_Ice_Goddess.Utility
             var waveclearMenu = Lissandra.Menu.AddSubMenu(new Menu("[IG] Waveclear", "lissandra.waveclear"));
             {
                 waveclearMenu.AddItem(new MenuItem("lissandra.waveclear.useQ", "Use Q").SetValue(true));
-                waveclearMenu.AddItem(new MenuItem("lissandra.waveclear.useQ", "Use W").SetValue(true));
-                waveclearMenu.AddItem(new MenuItem("lissandra.waveclear.useQ", "Use E").SetValue(true));
+                waveclearMenu.AddItem(new MenuItem("lissandra.waveclear.useW", "Use W").SetValue(true));
+                waveclearMenu.AddItem(new MenuItem("lissandra.waveclear.useE", "Use E").SetValue(true));
             }
 
             var fleeMenu = Lissandra.Menu.AddSubMenu(new Menu("[IG] Flee", "lissandra.flee"));

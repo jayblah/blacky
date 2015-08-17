@@ -7,6 +7,7 @@ using Color = System.Drawing.Color;
 using Menu = LeagueSharp.Common.Menu;
 using Lissandra_the_Ice_Goddess.Handlers;
 using Lissandra_the_Ice_Goddess.Utility;
+using Lissandra_the_Ice_Goddess.Utility.Damage;
 using SharpDX;
 
 namespace Lissandra_the_Ice_Goddess
@@ -101,7 +102,7 @@ namespace Lissandra_the_Ice_Goddess
                 Drawing.OnDraw += DrawHandler.OnDraw;
                 Game.OnUpdate += OnUpdate;
                 Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
-
+                DamagePrediction.OnTargettedSpellWillKill += DamagePrediction_OnTargettedSpellWillKill;
                 EStartTick = -1;
             }
             catch (Exception e)
@@ -109,6 +110,7 @@ namespace Lissandra_the_Ice_Goddess
                 Console.WriteLine("An error occurred: '{0}'", e);
             }
         }
+
 
         #endregion
 
@@ -142,11 +144,19 @@ namespace Lissandra_the_Ice_Goddess
             }
         }
 
+        static void DamagePrediction_OnTargettedSpellWillKill(Obj_AI_Hero sender, Obj_AI_Hero target, LeagueSharp.SpellData SData)
+        {
+            if (GetMenuValue<bool>("lissandra.misc.saveR") && SkillsHandler.Spells[SpellSlot.R].IsReady())
+            {
+                SkillsHandler.Spells[SpellSlot.R].Cast(ObjectManager.Player);
+            }
+        }
+
         #region OnEnemyGapcloser
 
         private static void OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            if (Menu.Item("misc.gapcloseW").GetValue<bool>() && SkillsHandler.Spells[SpellSlot.W].IsReady()
+            if (Menu.Item("lissandra.misc.gapcloseW").GetValue<bool>() && SkillsHandler.Spells[SpellSlot.W].IsReady()
                 && SkillsHandler.Spells[SpellSlot.W].IsInRange(gapcloser.Sender))
             {
                 SkillsHandler.Spells[SpellSlot.W].Cast();
@@ -159,7 +169,7 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnInterruptableTarget(Obj_AI_Hero sender, Interrupter2.InterruptableTargetEventArgs args)
         {
-            if (Menu.Item("misc.interruptR").GetValue<bool>())
+            if (Menu.Item("lissandra.misc.interruptR").GetValue<bool>())
             {
                 if (args.DangerLevel == Interrupter2.DangerLevel.High
                     && sender.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range)
@@ -190,7 +200,7 @@ namespace Lissandra_the_Ice_Goddess
                     break;
             }
 
-            if (Menu.Item("flee.activated").GetValue<KeyBind>().Active)
+            if (GetMenuValue<KeyBind>("lissandra.flee.activated").Active)
             {
                 OnFlee();
             }
@@ -239,7 +249,7 @@ namespace Lissandra_the_Ice_Goddess
                             skillshot.Caster.GetSpellDamage(ObjectManager.Player, skillshot.SpellData.SpellName) >=
                             ObjectManager.Player.Health + 15))
                 {
-                    //Found at least 1 spell that is gonna kill me.
+                    //Found at least 1 spell that is gonna kill me. Better immune Kappa.
                     SkillsHandler.Spells[SpellSlot.R].Cast();
                 }
             }
@@ -362,8 +372,13 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnFlee()
         {
-            // TODO
+            if (SkillsHandler.Spells[SpellSlot.W].IsReady() 
+                && ObjectManager.Player.CountEnemiesInRange(SkillsHandler.Spells[SpellSlot.W].Range) > 0)
+            {
+                SkillsHandler.Spells[SpellSlot.W].Cast();
+            }
             Orbwalking.Orbwalk(null, Game.CursorPos);
+
         }
 
         #endregion
