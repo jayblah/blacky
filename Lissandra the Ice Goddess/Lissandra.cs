@@ -311,6 +311,11 @@ namespace Lissandra_the_Ice_Goddess
                         }
                     }
                 }
+
+                if (ShouldUseIgnite() && player.Distance(comboTarget) <= 600)
+                {
+                    player.Spellbook.CastSpell(SkillsHandler.IgniteSlot, comboTarget);
+                }
             }
         }
 
@@ -391,7 +396,7 @@ namespace Lissandra_the_Ice_Goddess
                 SkillsHandler.QShard.Range, MinionTypes.All, MinionTeam.NotAlly);
             var minionsInRangeW = MinionManager.GetMinions(
                 ObjectManager.Player.ServerPosition,
-                SkillsHandler.Spells[SpellSlot.W].Width, MinionTypes.All, MinionTeam.NotAlly);
+                SkillsHandler.Spells[SpellSlot.W].Range, MinionTypes.All, MinionTeam.NotAlly);
             //This ain't java fuck you nazi resharper
             if (minionsInRange.Any())
             {
@@ -523,17 +528,6 @@ namespace Lissandra_the_Ice_Goddess
 
             return false;
         }
-
-        private static float GetIgniteDamage(Obj_AI_Base target)
-        {
-            if (!CanCastIgnite())
-            {
-                return 0f;
-            }
-            return (float)player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-        }
-
-
         #endregion
 
     }
