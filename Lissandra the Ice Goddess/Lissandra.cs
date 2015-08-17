@@ -217,6 +217,32 @@ namespace Lissandra_the_Ice_Goddess
         private static void OnUpdateMethods()
         {
             CheckEvade();
+            StunUnderTower();
+        }
+
+        private static void StunUnderTower()
+        {
+            if (GetMenuValue<bool>("lissandra.misc.stunUnderTower"))
+            {
+                foreach (
+                    var stunTarget in
+                        ObjectManager.Get<Obj_AI_Hero>()
+                            .Where(
+                                enemy =>
+                                enemy.IsEnemy
+                                && player.Distance(enemy.ServerPosition) <= SkillsHandler.Spells[SpellSlot.R].Range)
+                            .Where(
+                                enemy =>
+                                ObjectManager.Get<Obj_AI_Turret>()
+                                    .Where(turret => turret.IsValid && turret.IsAlly)
+                                    .Any(
+                                        turret =>
+                                        Vector2.Distance(enemy.Position.To2D(), turret.Position.To2D()) < 750
+                                        && SkillsHandler.Spells[SpellSlot.R].IsReady())))
+                {
+                    SkillsHandler.Spells[SpellSlot.R].Cast(stunTarget);
+                }
+            }
         }
 
         private static void CheckEvade()
@@ -430,7 +456,22 @@ namespace Lissandra_the_Ice_Goddess
 
         #endregion
 
-        #region GetComboDamage
+        #region Notifications Credits to Beaving.
+
+        public static Notification ShowNotification(string message, Color color, int duration = -1, bool dispose = true)
+        {
+            var notif = new Notification(message).SetTextColor(color);
+            Notifications.AddNotification(notif);
+            if (dispose)
+            {
+                LeagueSharp.Common.Utility.DelayAction.Add(duration, () => notif.Dispose());
+            }
+            return notif;
+        }
+
+        #endregion
+
+        #region Utility Methods
 
         public static float GetComboDamage(Obj_AI_Hero target)
         {
@@ -450,10 +491,6 @@ namespace Lissandra_the_Ice_Goddess
             return damage;
         }
 
-        #endregion
-
-        #region GetHitChance
-
         private static HitChance GetHitchance()
         {
             switch (Menu.Item("lissandra.misc.hitChance").GetValue<StringList>().SelectedIndex)
@@ -470,25 +507,6 @@ namespace Lissandra_the_Ice_Goddess
                     return HitChance.Medium;
             }
         }
-
-        #endregion
-
-        #region Notifications Credits to Beaving.
-
-        public static Notification ShowNotification(string message, Color color, int duration = -1, bool dispose = true)
-        {
-            var notif = new Notification(message).SetTextColor(color);
-            Notifications.AddNotification(notif);
-            if (dispose)
-            {
-                LeagueSharp.Common.Utility.DelayAction.Add(duration, () => notif.Dispose());
-            }
-            return notif;
-        }
-
-        #endregion
-
-        #region Utility Methods
 
         public static T GetMenuValue<T>(String menuItem)
         {

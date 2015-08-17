@@ -54,7 +54,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
                 miscMenu.AddItem(new MenuItem("lissandra.misc.gapcloseW", "Use W against gapclosers").SetValue(true));
                 miscMenu.AddItem(new MenuItem("lissandra.misc.interruptR", "Use R to interrupt dangerous spells").SetValue(true));
                 miscMenu.AddItem(new MenuItem("lissandra.misc.saveR", "Save my Ass with R").SetValue(true));
-
+                miscMenu.AddItem(new MenuItem("lissandra.misc.stunUnderTower", "Use R to stun enemies under Ally tower").SetValue(true));
                 miscMenu.AddItem(new MenuItem("lissandra.misc.hitChance", "Prediction Hitchance").SetValue(new StringList(new[] { "Low", "Medium", "High", "Very High" }, 3)));
             }
 
