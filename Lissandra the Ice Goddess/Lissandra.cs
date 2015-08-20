@@ -202,7 +202,7 @@ namespace Lissandra_the_Ice_Goddess
 
             if (GetMenuValue<KeyBind>("lissandra.flee.activated").Active)
             {
-                OnFlee();
+                OnFlee(Game.CursorPos);
             }
 
             OnUpdateMethods();
@@ -401,15 +401,33 @@ namespace Lissandra_the_Ice_Goddess
 
         #region Flee
 
-        private static void OnFlee()
+        private static void OnFlee(Vector3 position)
         {
-            if (SkillsHandler.Spells[SpellSlot.W].IsReady() 
-                && ObjectManager.Player.CountEnemiesInRange(SkillsHandler.Spells[SpellSlot.W].Range) > 0)
+            if (SkillsHandler.Spells[SpellSlot.W].IsReady()
+                && player.CountEnemiesInRange(SkillsHandler.Spells[SpellSlot.W].Range) > 0)
             {
                 SkillsHandler.Spells[SpellSlot.W].Cast();
             }
-            Orbwalking.Orbwalk(null, Game.CursorPos);
 
+            if (SkillsHandler.Spells[SpellSlot.E].IsReady())
+            {
+                if (!EActive)
+                {
+                    SkillsHandler.Spells[SpellSlot.E].Cast(position);
+                }
+                else
+                {
+                    if (CurrentEPosition.Distance(position) < 25)
+                    {
+                        if (CurrentEPosition.IsSafePositionEx() && CurrentEPosition.PassesNoEIntoEnemiesCheck())
+                        {
+                            SkillsHandler.Spells[SpellSlot.E].Cast();
+                        }
+                    }
+                }
+            }
+
+            Orbwalking.Orbwalk(null, Game.CursorPos);
         }
 
         #endregion
