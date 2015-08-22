@@ -8,7 +8,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
     {
         public static void Load()
         {
-            Lissandra.Menu = new Menu("Lissandra - Ice Goddess", "lissandra", true);
+            Lissandra.Menu = new Menu("Lissandra - Ice Goddess", "ice_lissandra", true);
 
             var owMenu = new Menu("[IG] Orbwalker", "orbwalker");
             Lissandra.Orbwalker = new Orbwalking.Orbwalker(owMenu);
