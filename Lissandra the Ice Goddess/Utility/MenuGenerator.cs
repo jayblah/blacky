@@ -25,7 +25,9 @@ namespace Lissandra_the_Ice_Goddess.Utility
 
                 var comboOptionsMenu = new Menu("Combo - Options", "lissandra.combo.options");
                 {
-                    comboOptionsMenu.AddItem(new MenuItem("combo.options.useIgnite", "Use Ignite").SetValue(true));
+                    comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.selfR", "Use R on Self if HP <").SetValue(new Slider(15)));
+                    comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.defensiveR", "Use R on Self if > enemys").SetValue(new Slider(3, 0, 5)));
+                    comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.useIgnite", "Use Ignite").SetValue(true));
 
                     comboMenu.AddSubMenu(comboOptionsMenu);
                 }

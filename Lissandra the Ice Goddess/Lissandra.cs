@@ -144,7 +144,7 @@ namespace Lissandra_the_Ice_Goddess
             }
         }
 
-        static void DamagePrediction_OnTargettedSpellWillKill(Obj_AI_Hero sender, Obj_AI_Hero target, LeagueSharp.SpellData sData)
+        private static void DamagePrediction_OnTargettedSpellWillKill(Obj_AI_Hero sender, Obj_AI_Hero target, LeagueSharp.SpellData sData)
         {
             if (GetMenuValue<bool>("lissandra.misc.saveR") && SkillsHandler.Spells[SpellSlot.R].IsReady())
             {
@@ -307,7 +307,7 @@ namespace Lissandra_the_Ice_Goddess
 
                 if (GetMenuValue<bool>("lissandra.combo.useW")
                     && comboTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range)
-                    && SkillsHandler.Spells[SpellSlot.W].IsReady())
+                    && SkillsHandler.Spells[SpellSlot.W].IsReady() && !comboTarget.IsStunned)
                 {
                     SkillsHandler.Spells[SpellSlot.W].Cast();
                 }
@@ -335,6 +335,29 @@ namespace Lissandra_the_Ice_Goddess
                                 SkillsHandler.Spells[SpellSlot.E].Cast();
                             }
                         }
+                    }
+                }
+
+                if (GetMenuValue<bool>("lissandra.combo.useR")
+                    && comboTarget.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range)
+                    && SkillsHandler.Spells[SpellSlot.R].IsReady())
+                {
+                    var selfR = GetMenuValue<Slider>("lissandra.combo.options.selfR").Value;
+                    var defensiveR = GetMenuValue<Slider>("lissandra.combo.options.defensiveR").Value;
+
+                    if (player.CountEnemiesInRange(250) >= defensiveR)
+                    {
+                        SkillsHandler.Spells[SpellSlot.R].CastOnUnit(player);
+                    }
+
+                    if (player.Health / player.MaxHealth * 100 < selfR)
+                    {
+                        SkillsHandler.Spells[SpellSlot.R].CastOnUnit(player);
+                    }
+
+                    if ((player.GetSpellDamage(comboTarget, SpellSlot.R)) > comboTarget.Health + 10)
+                    {
+                        SkillsHandler.Spells[SpellSlot.R].CastOnUnit(comboTarget);
                     }
                 }
 
@@ -462,7 +485,7 @@ namespace Lissandra_the_Ice_Goddess
                 }
             }
 
-            foreach (var minion in minionsInRangeW.Where(x => minionsInRangeW.Count >= 2 && player.GetSpellDamage(x, SpellSlot.W, 1) - 10 >= 
+            foreach (var minion in minionsInRangeW.Where(x => minionsInRangeW.Count >= 2 && player.GetSpellDamage(x, SpellSlot.W) - 10 >= 
                                           HealthPrediction.GetHealthPrediction(x, (int)(SkillsHandler.Spells[SpellSlot.W].Delay))))
             {
                 if (GetMenuValue<bool>("lissandra.waveclear.useW"))
@@ -533,7 +556,7 @@ namespace Lissandra_the_Ice_Goddess
 
         private static bool CanCastIgnite()
         {
-            return GetMenuValue<bool>("combo.options.useIgnite") && SkillsHandler.IgniteSlot != SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.IgniteSlot) != SpellState.Ready;
+            return GetMenuValue<bool>("lissandra.combo.options.useIgnite") && SkillsHandler.IgniteSlot != SpellSlot.Unknown || player.Spellbook.CanUseSpell(SkillsHandler.IgniteSlot) != SpellState.Ready;
         }
 
         private static bool ShouldUseIgnite(Obj_AI_Hero target)
