@@ -65,12 +65,12 @@ namespace Lissandra_the_Ice_Goddess.Utility
 
             var drawingMenu = Lissandra.Menu.AddSubMenu(new Menu("[IG] Drawings", "lissandra.drawing"));
             {
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawQ", "Draw Q").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawW", "Draw W").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawE", "Draw E").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawR", "Draw R").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawDamage", "Draw Damage").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawingsOff", "Turn drawings off").SetValue(new Circle(true, Color.GreenYellow)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawQ", "Draw Q").SetValue(new Circle(true, Color.Aqua)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawW", "Draw W").SetValue(new Circle(true, Color.Aqua)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawE", "Draw E").SetValue(new Circle(true, Color.Aqua)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawR", "Draw R").SetValue(new Circle(true, Color.Aqua)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawDamage", "Draw Damage").SetValue(new Circle(true, Color.GreenYellow)));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawingsOff", "Turn drawings off").SetValue(false));
             }
 
             Lissandra.Menu.AddItem(new MenuItem("seperator", ""));
