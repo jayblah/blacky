@@ -23,14 +23,7 @@ namespace BlackZilean
         private const string ChampionName = "Zilean";
         private static Obj_AI_Hero _player;
         private static readonly List<Spell> SpellList = new List<Spell>();
-        private static readonly Dictionary<Spells, Spell> Spells = new Dictionary<Spells, Spell>
-                                                                {
-                                                                    { Spells.Q, new Spell(SpellSlot.Q, 675) }, 
-                                                                    { Spells.Q1, new Spell(SpellSlot.Q, 1100) }, 
-                                                                    { Spells.W, new Spell(SpellSlot.W, 1000) }, 
-                                                                    { Spells.E, new Spell(SpellSlot.E, 425) }, 
-                                                                    { Spells.R, new Spell(SpellSlot.R, 1400) }
-                                                                };
+        private static Spell _timeBomb , _rewind, _timeWarp, _chronoshift;
         private static SpellSlot _ignite;
         private static Menu _menu;
         private static Orbwalking.Orbwalker _orbwalker;
@@ -68,11 +61,6 @@ namespace BlackZilean
             _rewind = new Spell(SpellSlot.W, 0);
             _timeWarp = new Spell(SpellSlot.E, 700);
             _chronoshift = new Spell(SpellSlot.R, 900);
-
-            Spells[SpellSlot.Q].SetTargetted(0.25f, 2000);
-            Spells[SpellSlot.W].SetSkillshot(0.25f, 300, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            Spells[SpellSlot.E].SetSkillshot(0.0f, 90, 1200, false, SkillshotType.SkillshotLine);
-            Spells[SpellSlot.R].SetSkillshot(0.25f, 250, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             SpellList.AddRange(new[] { _timeBomb, _timeWarp });
 
