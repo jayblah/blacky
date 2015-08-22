@@ -144,7 +144,7 @@ namespace Lissandra_the_Ice_Goddess
             }
         }
 
-        static void DamagePrediction_OnTargettedSpellWillKill(Obj_AI_Hero sender, Obj_AI_Hero target, LeagueSharp.SpellData SData)
+        static void DamagePrediction_OnTargettedSpellWillKill(Obj_AI_Hero sender, Obj_AI_Hero target, LeagueSharp.SpellData sData)
         {
             if (GetMenuValue<bool>("lissandra.misc.saveR") && SkillsHandler.Spells[SpellSlot.R].IsReady())
             {
@@ -436,38 +436,38 @@ namespace Lissandra_the_Ice_Goddess
 
         private static void OnWaveclear()
         {
-            var minionsInRange = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
-                SkillsHandler.QShard.Range, MinionTypes.All, MinionTeam.NotAlly);
+            var minionsInRange = MinionManager.GetMinions(
+                player.ServerPosition,
+                SkillsHandler.QShard.Range,
+                MinionTypes.All,
+                MinionTeam.NotAlly);
             var minionsInRangeW = MinionManager.GetMinions(
-                ObjectManager.Player.ServerPosition,
-                SkillsHandler.Spells[SpellSlot.W].Range, MinionTypes.All, MinionTeam.NotAlly);
-            //This ain't java fuck you nazi resharper
-            if (minionsInRange.Any())
+                player.ServerPosition,
+                SkillsHandler.Spells[SpellSlot.W].Range,
+                MinionTypes.All,
+                MinionTeam.NotAlly);
+
+            if (!ManaManager.CanLaneclear())
             {
-                if (GetMenuValue<bool>("lissandra.waveclear.useQ") && SkillsHandler.Spells[SpellSlot.Q].IsReady())
+                return;
+            }
+
+            if (GetMenuValue<bool>("lissandra.waveclear.useQ") && SkillsHandler.Spells[SpellSlot.Q].IsReady())
+            {
+                var qLineFarm = SkillsHandler.Spells[SpellSlot.Q].GetLineFarmLocation(minionsInRange);
+
+                if (qLineFarm.MinionsHit >= 3)
                 {
-                    //Gets the minion that has max collision at its position, so we hit as many minions with Q as possible.
-                    Obj_AI_Base maxCollisionMinion = null;
-                    var maxCollisionNumber = 0;
-                    foreach (var minion in minionsInRange.Where(minion => SkillsHandler.GetQCollisionObjects(minion) > maxCollisionNumber))
-                    {
-                        maxCollisionNumber = SkillsHandler.GetQCollisionObjects(minion);
-                        maxCollisionMinion = minion;
-                    }
-
-                    if (maxCollisionMinion.IsValidTarget() && maxCollisionNumber + 1 >= 3) //We hit at least 3 minions (Including the starting one).
-                    {
-                        SkillsHandler.Spells[SpellSlot.Q].Cast(maxCollisionMinion);
-
-                    }
+                    SkillsHandler.Spells[SpellSlot.Q].Cast(qLineFarm.Position);
                 }
+            }
 
-                if (GetMenuValue<bool>("lissandra.waveclear.useW") && SkillsHandler.Spells[SpellSlot.W].IsReady())
+            foreach (var minion in minionsInRangeW.Where(x => minionsInRangeW.Count >= 2 && player.GetSpellDamage(x, SpellSlot.W, 1) - 10 >= 
+                                          HealthPrediction.GetHealthPrediction(x, (int)(SkillsHandler.Spells[SpellSlot.W].Delay))))
+            {
+                if (GetMenuValue<bool>("lissandra.waveclear.useW"))
                 {
-                    if (minionsInRangeW.Count >= 2)
-                    {
-                        SkillsHandler.Spells[SpellSlot.W].Cast();
-                    }
+                    SkillsHandler.Spells[SpellSlot.W].Cast(minion);
                 }
             }
         }

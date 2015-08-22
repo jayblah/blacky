@@ -23,8 +23,8 @@ namespace Lissandra_the_Ice_Goddess.Utility
         {
             var manaMenu = new Menu("[IG] Mana Manager", "ManaManager");
             {
-                manaMenu.AddItem(new MenuItem("min.harass.Mana", "Mana % for Harass").SetValue(new Slider(40)));
-                manaMenu.AddItem(new MenuItem("min.laneclear.Mana", "Mana % for Wave & Jungleclear").SetValue(new Slider(40)));
+                manaMenu.AddItem(new MenuItem("lissandra.harass.Mana", "Mana % for Harass").SetValue(new Slider(25)));
+                manaMenu.AddItem(new MenuItem("lissandra.laneclear.Mana", "Mana % for Wave & Jungleclear").SetValue(new Slider(40)));
             }
 
             this.menu.AddSubMenu(manaMenu);
@@ -44,12 +44,12 @@ namespace Lissandra_the_Ice_Goddess.Utility
 
         public bool CanHarass()
         {
-            return !(this.player.ManaPercent <= this.menu.Item("min.harass.Mana").GetValue<Slider>().Value);
+            return !(this.player.ManaPercent <= this.menu.Item("lissandra.harass.Mana").GetValue<Slider>().Value);
         }
 
         public bool CanLaneclear()
         {
-            return !(this.player.ManaPercent <= this.menu.Item("min.laneclear.Mana").GetValue<Slider>().Value);
+            return !(this.player.ManaPercent <= this.menu.Item("lissandra.laneclear.Mana").GetValue<Slider>().Value);
         }
     }
 }
