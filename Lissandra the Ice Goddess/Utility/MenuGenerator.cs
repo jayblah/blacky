@@ -1,4 +1,5 @@
 ﻿using LeagueSharp.Common;
+using Color = System.Drawing.Color;
 
 namespace Lissandra_the_Ice_Goddess.Utility
 {
@@ -69,7 +70,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
                 drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawE", "Draw E").SetValue(new Circle()));
                 drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawR", "Draw R").SetValue(new Circle()));
                 drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawDamage", "Draw Damage").SetValue(new Circle()));
-                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawingsOff", "Turn drawings off").SetValue(false));
+                drawingMenu.AddItem(new MenuItem("lissandra.drawing.drawingsOff", "Turn drawings off").SetValue(new Circle(true, Color.GreenYellow)));
             }
 
             Lissandra.Menu.AddItem(new MenuItem("seperator", ""));
