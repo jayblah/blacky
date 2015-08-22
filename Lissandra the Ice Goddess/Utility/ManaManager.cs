@@ -30,6 +30,11 @@ namespace Lissandra_the_Ice_Goddess.Utility
             this.menu.AddSubMenu(manaMenu);
         }
 
+        public bool PlayerHasPassive()
+        {
+            return this.player.HasBuff("LissandraPassiveReady");
+        }
+
         public bool CanUseSpell(Spell spell)
         {
             return this.player.Mana >= this.player.Spellbook.GetSpell(spell.Slot).ManaCost;

@@ -387,7 +387,7 @@ namespace Lissandra_the_Ice_Goddess
         {
             var harassTarget = TargetSelector.GetTarget(SkillsHandler.QShard.Range, TargetSelector.DamageType.Magical);
 
-            if (!ManaManager.CanHarass())
+            if (!ManaManager.CanHarass() && !ManaManager.PlayerHasPassive())
             {
                 return;
             }
@@ -475,7 +475,7 @@ namespace Lissandra_the_Ice_Goddess
                 MinionTypes.All,
                 MinionTeam.NotAlly);
 
-            if (!ManaManager.CanLaneclear())
+            if (!ManaManager.CanLaneclear() && !ManaManager.PlayerHasPassive())
             {
                 return;
             }
