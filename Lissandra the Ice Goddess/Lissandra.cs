@@ -328,7 +328,7 @@ namespace Lissandra_the_Ice_Goddess
                     }
                     else
                     {
-                        if (CurrentEPosition.Distance(comboTarget.ServerPosition) <= 200f || CurrentEPosition.Distance(EEnd) <= 100f)
+                        if (CurrentEPosition.Distance(comboTarget.ServerPosition) <= SkillsHandler.Spells[SpellSlot.W].Range/2f || CurrentEPosition.Distance(EEnd) <= 100f)
                         {
                             if (CurrentEPosition.IsSafePositionEx() && CurrentEPosition.PassesNoEIntoEnemiesCheck())
                             {
