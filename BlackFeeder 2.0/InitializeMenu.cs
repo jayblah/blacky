@@ -18,6 +18,7 @@ namespace BlackFeeder
                 feedingMenu.AddItem(new MenuItem("Messages.Activated", "Messages Activated").SetValue(true));
                 feedingMenu.AddItem(new MenuItem("Laugh.Activated", "Laugh Activated").SetValue(true));
                 feedingMenu.AddItem(new MenuItem("Items.Activated", "Items Activated").SetValue(true));
+                feedingMenu.AddItem(new MenuItem("Attacks.Disabled", "Disable auto attacks").SetValue(true));
             }
 
             var miscMenu = Entry.Menu.AddSubMenu(new Menu("Misc Options", "MiscMenu"));

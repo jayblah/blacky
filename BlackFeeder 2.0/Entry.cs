@@ -234,6 +234,7 @@ namespace BlackFeeder
                 SRShopAI.Main.Init(); //Credits to Insensitivity for his amazing "ARAMShopAI" assembly
                 Game.OnUpdate += OnUpdate;
                 Game.OnEnd += OnEnd;
+                Obj_AI_Base.OnIssueOrder += OnIssueOrder;
             }
             catch (Exception e)
             {
@@ -273,6 +274,23 @@ namespace BlackFeeder
                 {
                     TopVectorReached = true;
                 }
+            }
+        }
+
+        #endregion
+
+        #region OnIssueOrder
+
+        private static void OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        {
+            if (!Menu.Item("Attacks.Disabled").GetValue<bool>())
+            {
+                return;
+            }
+
+            if (sender.IsMe && args.Order == GameObjectOrder.AttackTo)
+            {
+                args.Process = false;
             }
         }
 
