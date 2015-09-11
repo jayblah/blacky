@@ -325,6 +325,13 @@ namespace Lissandra_the_Ice_Goddess
                         {
                             SkillsHandler.Spells[SpellSlot.E].Cast(comboTargetPosition);
                         }
+                        else
+                        {
+                            if (SkillsHandler.Spells[SpellSlot.E].IsInRange(comboTargetPosition) && CurrentEPosition.IsSafePositionEx())
+                            {
+                                SkillsHandler.Spells[SpellSlot.E].Cast(comboTarget);
+                            }
+                        }
                     }
                 }
 
