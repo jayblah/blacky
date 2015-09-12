@@ -3,6 +3,9 @@ using Color = System.Drawing.Color;
 
 namespace Lissandra_the_Ice_Goddess.Utility
 {
+    using System.Linq;
+
+    using LeagueSharp;
 
     public class MenuGenerator
     {
@@ -26,6 +29,10 @@ namespace Lissandra_the_Ice_Goddess.Utility
 
                 var comboOptionsMenu = new Menu("Combo - Options", "lissandra.combo.options");
                 {
+                    comboOptionsMenu.AddItem(new MenuItem("sep1", "Don't use Ult on:"));
+                    foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsEnemy))
+                        comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.whitelistR" + hero.CharData.BaseSkinName, hero.CharData.BaseSkinName).SetValue(false));
+                    comboOptionsMenu.AddItem(new MenuItem("sep2", ""));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.selfR", "Use R on Self if HP <").SetValue(new Slider(15)));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.defensiveR", "Use R on Self if > enemys").SetValue(new Slider(3, 0, 5)));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.useIgnite", "Use Ignite").SetValue(true));
