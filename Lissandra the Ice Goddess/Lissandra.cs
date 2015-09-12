@@ -347,12 +347,17 @@ namespace Lissandra_the_Ice_Goddess
                         SkillsHandler.Spells[SpellSlot.R].CastOnUnit(player);
                     }
 
-                    if (player.Health / player.MaxHealth * 100 < selfR)
+                    if (player.Health / player.MaxHealth * 100 < selfR && player.CountEnemiesInRange(SkillsHandler.Spells[SpellSlot.R].Range) > 0)
                     {
                         SkillsHandler.Spells[SpellSlot.R].CastOnUnit(player);
                     }
 
-                    if ((player.GetSpellDamage(comboTarget, SpellSlot.R)) > comboTarget.Health + 10
+                    if (GetMenuValue<bool>("lissandra.combo.options.alwaysR"))
+                    {
+                        SkillsHandler.Spells[SpellSlot.R].CastOnUnit(comboTarget);
+                    }
+
+                    if ((player.GetSpellDamage(comboTarget, SpellSlot.R) * 1.2) > comboTarget.Health + 10
                         && Menu.Item("lissandra.combo.options.whitelistR" + comboTarget.CharData.BaseSkinName) != null
                         && Menu.Item("lissandra.combo.options.whitelistR" + comboTarget.CharData.BaseSkinName)
                                .GetValue<bool>() == false)

@@ -33,6 +33,7 @@ namespace Lissandra_the_Ice_Goddess.Utility
                     foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsEnemy))
                         comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.whitelistR" + hero.CharData.BaseSkinName, hero.CharData.BaseSkinName).SetValue(false));
                     comboOptionsMenu.AddItem(new MenuItem("sep2", ""));
+                    comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.alwaysR", "Always use R in Combo").SetValue(false));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.selfR", "Use R on Self if HP <").SetValue(new Slider(15)));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.defensiveR", "Use R on Self if > enemys").SetValue(new Slider(3, 0, 5)));
                     comboOptionsMenu.AddItem(new MenuItem("lissandra.combo.options.useIgnite", "Use Ignite").SetValue(true));
