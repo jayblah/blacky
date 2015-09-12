@@ -583,22 +583,24 @@ namespace Lissandra_the_Ice_Goddess
         {
             if (!CanCastIgnite())
             {
-                return false; //Duh
+                return false;
             }
             var damage = 0f;
 
             damage += (float)ObjectManager.Player.GetAutoAttackDamage(target, true) * 2;
             damage += (SkillsHandler.GetQPrediction(target) != null && SkillsHandler.Spells[SpellSlot.Q].IsReady() && GetMenuValue<bool>("lissandra.combo.useQ"))
-                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q)
+                ? (float)player.GetSpellDamage(target, SpellSlot.Q)
                 : 0f;
             damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.W].Range) && SkillsHandler.Spells[SpellSlot.W].IsReady() && GetMenuValue<bool>("lissandra.combo.useW"))
-                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.W)
+                ? (float)player.GetSpellDamage(target, SpellSlot.W)
+                : 0f;
+            damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.E].Range) && SkillsHandler.Spells[SpellSlot.E].IsReady() && GetMenuValue<bool>("lissandra.combo.useE"))
+                ? (float)player.GetSpellDamage(target, SpellSlot.E)
                 : 0f;
             damage += (target.IsValidTarget(SkillsHandler.Spells[SpellSlot.R].Range) && SkillsHandler.Spells[SpellSlot.R].IsReady() && GetMenuValue<bool>("lissandra.combo.useR"))
-                ? (float)ObjectManager.Player.GetSpellDamage(target, SpellSlot.R)
+                ? (float)player.GetSpellDamage(target, SpellSlot.R)
                 : 0f;
-            var damageWithIgnite = damage +
-                                   ObjectManager.Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+            var damageWithIgnite = damage + player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
 
             if (damage < target.Health + 15 && damageWithIgnite > target.Health + 15)
             {
