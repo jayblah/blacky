@@ -54,9 +54,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DamageIndicator.cs" />
-    <Compile Include="ManaManager.cs" />
+    <Compile Include="Handlers\DrawHandler.cs" />
+    <Compile Include="Handlers\SkillsHandler.cs" />
+    <Compile Include="Utility\DamageIndicator.cs" />
+    <Compile Include="Utility\ManaManager.cs" />
+    <Compile Include="Utility\MenuGenerator.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Zilean.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

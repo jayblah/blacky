@@ -1,54 +1,39 @@
-﻿// This file is part of LeagueSharp.Common.
-// 
-// LeagueSharp.Common is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// LeagueSharp.Common is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with LeagueSharp.Common.  If not, see <http://www.gnu.org/licenses/>.
-
-using System;
+﻿using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace BlackZilean
+namespace BlackZilean.Utility
 {
     internal class DamageIndicator
     {
         private const int BarWidth = 104;
         private const int LineThickness = 9;
-        private static Utility.HpBarDamageIndicator.DamageToUnitDelegate _damageToUnit;
+        private static LeagueSharp.Common.Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnit;
         private static readonly Vector2 BarOffset = new Vector2(10, 25);
-        private static Color _drawingColor;
+        private static Color drawingColor;
 
         public static Color DrawingColor
         {
-            get { return _drawingColor; }
-            set { _drawingColor = Color.FromArgb(170, value); }
+            get { return drawingColor; }
+            set { drawingColor = Color.FromArgb(170, value); }
         }
 
         public static bool Enabled { get; set; }
 
-        public static void Initialize(Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnit)
+        public static void Initialize(LeagueSharp.Common.Utility.HpBarDamageIndicator.DamageToUnitDelegate damageToUnitDelegate)
         {
             // Apply needed field delegate for damage calculation
-            _damageToUnit = damageToUnit;
-            DrawingColor = Color.Green;
+            damageToUnit = damageToUnitDelegate;
+            DrawingColor = Color.GreenYellow;
             Enabled = true;
             // Register event handlers
-            Drawing.OnDraw += Drawing_OnDraw;
+            Drawing.OnDraw += OnDraw;
         }
 
-        private static void Drawing_OnDraw(EventArgs args)
+        private static void OnDraw(EventArgs args)
         {
             if (Enabled)
             {
@@ -56,7 +41,7 @@ namespace BlackZilean
                     var unit in ObjectManager.Get<Obj_AI_Hero>().Where(u => u.IsValidTarget() && u.IsHPBarRendered))
                 {
                     // Get damage to unit
-                    var damage = _damageToUnit(unit);
+                    var damage = damageToUnit(unit);
                     // Continue on 0 damage
                     if (damage <= 0)
                     {
