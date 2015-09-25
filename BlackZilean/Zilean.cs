@@ -88,7 +88,7 @@ namespace BlackZilean
                     break;
             }
 
-            if (GetMenuValue<KeyBind>("kassadin.flee.activated").Active)
+            if (GetMenuValue<KeyBind>("zilean.flee.activated").Active)
             {
                 OnFlee(Game.CursorPos);
             }
