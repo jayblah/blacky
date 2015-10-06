@@ -63,7 +63,7 @@ namespace Kassadin_the_Harbinger.Utility
             {
                 miscMenu.AddItem(new MenuItem("kassadin.misc.interruptQ", "Use Q to interrupt dangerous spells").SetValue(true));
                 miscMenu.AddItem(new MenuItem("kassadin.misc.gapcloseE", "Use E against gapclosers").SetValue(true));
-                miscMenu.AddItem(new MenuItem("kassadin.misc.customERange", "Custom E Range").SetValue(new Slider(400, 400, 500))).ValueChanged +=
+                miscMenu.AddItem(new MenuItem("kassadin.misc.customERange", "Custom E Range").SetValue(new Slider(400, 400, 600))).ValueChanged +=
                     (sender, args) =>
                     {
                         SkillsHandler.Spells[SpellSlot.E].Range = CustomRange;
@@ -75,7 +75,7 @@ namespace Kassadin_the_Harbinger.Utility
             var drawingMenu = Kassadin.Menu.AddSubMenu(new Menu("[KH] Drawings", "kassadin.drawing"));
             {
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawQ", "Draw Q").SetValue(new Circle(true, Color.DarkOrange)));
-                drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawW", "Draw W").SetValue(new Circle(true, Color.DarkOrange)));
+                //drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawW", "Draw W").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawE", "Draw E").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawR", "Draw R").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawDamage", "Draw Damage").SetValue(new Circle(true, Color.GreenYellow)));

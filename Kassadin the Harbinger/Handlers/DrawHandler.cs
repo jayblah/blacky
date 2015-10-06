@@ -12,7 +12,6 @@ namespace Kassadin_the_Harbinger.Handlers
         {
             var drawOff = Kassadin.Menu.Item("kassadin.drawing.drawingsOff").GetValue<bool>();
             var drawQ = Kassadin.Menu.Item("kassadin.drawing.drawQ").GetValue<Circle>();
-            var drawW = Kassadin.Menu.Item("kassadin.drawing.drawW").GetValue<Circle>();
             var drawE = Kassadin.Menu.Item("kassadin.drawing.drawE").GetValue<Circle>();
             var drawR = Kassadin.Menu.Item("kassadin.drawing.drawR").GetValue<Circle>();
             var drawDamage = Kassadin.Menu.Item("kassadin.drawing.drawDamage").GetValue<Circle>();
@@ -30,14 +29,6 @@ namespace Kassadin_the_Harbinger.Handlers
                 if (SkillsHandler.Spells[SpellSlot.Q].Level > 0)
                 {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.Q].Range, Color.DarkOrange);
-                }
-            }
-
-            if (drawW.Active)
-            {
-                if (SkillsHandler.Spells[SpellSlot.W].Level > 0)
-                {
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, SkillsHandler.Spells[SpellSlot.W].Range, Color.DarkOrange);
                 }
             }
 
