@@ -19,10 +19,6 @@ LeagueSharp Profile: https://www.joduska.me/forum/user/38-blacky/
 
 -BlackFeeder 2.0
 
--BlackPoppy
-
--BlackWarwick
-
 -BlackZilean
 
 -Kassadin the Harbinger

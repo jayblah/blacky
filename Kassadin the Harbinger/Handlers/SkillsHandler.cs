@@ -3,6 +3,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using Kassadin_the_Harbinger.Utility;
 
 namespace Kassadin_the_Harbinger.Handlers
 {
@@ -13,8 +14,8 @@ namespace Kassadin_the_Harbinger.Handlers
         public static readonly Dictionary<SpellSlot, Spell> Spells = new Dictionary<SpellSlot, Spell>
                                                                          {
                                                                              { SpellSlot.Q, new Spell(SpellSlot.Q, 650) },
-                                                                             { SpellSlot.W, new Spell(SpellSlot.W, 150) },
-                                                                             { SpellSlot.E, new Spell(SpellSlot.E, 400) },
+                                                                             { SpellSlot.W, new Spell(SpellSlot.W) },
+                                                                             { SpellSlot.E, new Spell(SpellSlot.E, MenuGenerator.CustomRange) },
                                                                              { SpellSlot.R, new Spell(SpellSlot.R, 500) }
                                                                          };
 

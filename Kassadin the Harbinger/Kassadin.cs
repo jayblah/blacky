@@ -280,11 +280,16 @@ namespace Kassadin_the_Harbinger
 
             if (GetMenuValue<bool>("kassadin.waveclear.useE") && SkillsHandler.Spells[SpellSlot.E].IsReady() && ECanCast)
             {
-                var eFarm = SkillsHandler.Spells[SpellSlot.E].GetCircularFarmLocation(minionsInRangeE);
 
-                if (eFarm.MinionsHit >= 3)
+                if (minionsInRangeE.Count >= 1)
                 {
-                    SkillsHandler.Spells[SpellSlot.E].Cast(eFarm.Position);
+                    foreach (var x in minionsInRangeE)
+                    {
+                        if (x.IsValidTarget() && MinionManager.GetMinions(x.ServerPosition, 275).Count >= 3)
+                        {
+                            SkillsHandler.Spells[SpellSlot.E].Cast(x.ServerPosition);
+                        }
+                    }
                 }
             }
         }

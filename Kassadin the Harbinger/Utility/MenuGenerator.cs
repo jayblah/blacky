@@ -1,10 +1,17 @@
 ﻿using LeagueSharp.Common;
+using LeagueSharp;
 using Color = System.Drawing.Color;
+using Kassadin_the_Harbinger.Handlers;
 
 namespace Kassadin_the_Harbinger.Utility
 {
     public class MenuGenerator
     {
+        public static float CustomRange
+        {
+            get { return Kassadin.Menu.Item("kassadin.misc.customERange").GetValue<Slider>().Value; }
+        }
+
         public static void Load()
         {
             Kassadin.Menu = new Menu("Kassadin - Harbinger", "kassadin_harbinger", true);
@@ -51,10 +58,16 @@ namespace Kassadin_the_Harbinger.Utility
                 fleeMenu.AddItem(new MenuItem("kassadin.flee.activated", "Flee Activated").SetValue(new KeyBind('G', KeyBindType.Press)));
             }
 
+
             var miscMenu = Kassadin.Menu.AddSubMenu(new Menu("[KH] Miscellaneous", "kassadin.misc"));
             {
                 miscMenu.AddItem(new MenuItem("kassadin.misc.interruptQ", "Use Q to interrupt dangerous spells").SetValue(true));
                 miscMenu.AddItem(new MenuItem("kassadin.misc.gapcloseE", "Use E against gapclosers").SetValue(true));
+                miscMenu.AddItem(new MenuItem("kassadin.misc.customERange", "Custom E Range").SetValue(new Slider(400, 400, 600))).ValueChanged +=
+                    (sender, args) =>
+                    {
+                        SkillsHandler.Spells[SpellSlot.E].Range = CustomRange;
+                    };
             }
 
             Kassadin.ManaManager.AddToMenu(ref Kassadin.Menu);
@@ -62,7 +75,7 @@ namespace Kassadin_the_Harbinger.Utility
             var drawingMenu = Kassadin.Menu.AddSubMenu(new Menu("[KH] Drawings", "kassadin.drawing"));
             {
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawQ", "Draw Q").SetValue(new Circle(true, Color.DarkOrange)));
-                drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawW", "Draw W").SetValue(new Circle(true, Color.DarkOrange)));
+                //drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawW", "Draw W").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawE", "Draw E").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawR", "Draw R").SetValue(new Circle(true, Color.DarkOrange)));
                 drawingMenu.AddItem(new MenuItem("kassadin.drawing.drawDamage", "Draw Damage").SetValue(new Circle(true, Color.GreenYellow)));
